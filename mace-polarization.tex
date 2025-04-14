@@ -65,6 +65,7 @@ In this study we extend the MACE architecture to respond to an external electric
 \section{Theory}\label{section: theory}
 
 \begin{itemize}
+\color{blue}
     \item Introduce a brief overview of modern approach of polarisation (King-Smith \& Vanderbilt, and Resta).
     \item How electronic structure methods (DFPT) implement polarisation and the electric enthalpy (Nunes \& Gonze and  Souza, Íñiguez, \& Vanderbilt).
     \item How macroscopic properties, BECs \& polarisability etc., defined (derivatives of energy w.r.t positions, electric field etc.).
@@ -92,7 +93,8 @@ In this study we extend the MACE architecture to respond to an external electric
     E\left[\left\{\psi^{(\bm{\mathcal{E}})}\right\}, \bm{\mathcal{E}}\right] = E_0\left[\left\{ \psi^{(\bm{\mathcal{E}})} \right\}\right] - \Omega\ \bm{\mathcal{E}} \cdot \vb{P}\left[\left\{ \psi^{(\bm{\mathcal{E}})} \right\}\right]
 \end{equation}
 
-\section{Methods}\label{section: methods}
+
+\section{Methodology}\label{section: methods}
 
 \subsection{Architecture}
 
@@ -113,7 +115,7 @@ Our approach inherits most of the original MACE architecture. The primary altera
 \end{widetext}
 To preserve higher-order tensorial information for the final readout blocks, we allow $l>0$ spherical harmonic features in the final layers of the interaction and product blocks.
 
-After the higher body-order node features are produced, we map them to two scalar features and one vector feature which we may relate to the local node energy, charge and electronic dipole moment,
+After the higher body-order node features are produced, we linearly map them to two scalar features and one vector feature which we may relate to the local node energy, charge and electronic dipole moment,
 \begin{equation}
     \left[ h_{\alpha, k 0 0}^{e, (t)},\ h_{\alpha, k 0 0}^{q, (t)},\ h_{\alpha, k 1 m}^{(t)} \right] = \sum_{l \Tilde{m}} W^{l \Tilde{m}}_{0 0, 1 m} h^{(t)}_{\alpha,kl\Tilde{m}}.
 \end{equation}
@@ -121,28 +123,63 @@ Note that these are not complete readouts yet as we have not yet mixed the $k$ c
 \begin{equation}
     \vb{p}^{(t)}_{\alpha,k} = h^{q,(t)}_{\alpha,k 0 0} \vb{R}_{\alpha} - \vb{h}^{(t)}_{\alpha,k 1},
 \end{equation}
-where the first term represents the atomic dipole contribution. This `total dipole' acts as an atomic decomposition of the total macroscopic polarisation and contributes to the total energy dotted with the external electric field.
-
-\begin{equation}
-\begin{aligned}
-    E(\{Z_\alpha, \vb{R}_\alpha\}, \bm{\mathcal{E}}) &\simeq E_0(\{Z_\alpha, \vb{R}_\alpha\}) - \Omega\ \bm{\mathcal{E}} \cdot \vb{P}(\{Z_\alpha, \vb{R}_\alpha\}) \\
-    &- \frac{\Omega}{2}\ \bm{\mathcal{E}} \cdot \bm{\alpha}(\{Z_\alpha, \vb{R}_\alpha\}) \cdot \bm{\mathcal{E}}
-\end{aligned}
-\end{equation}
+where the first term represents the atomic dipole contribution. This `total dipole' acts as an atomic decomposition of the total macroscopic polarisation and, dot product with the external electric field, contributes to the total energy.
 
 \subsection{Derivative Macroscopic Properties}
 
+The predicted energy $E$ depends upon the atomic positions $\vb{R}_{\alpha}$ and the external electric field $\bm{\mathcal{E}}$ to arbitrary order, 
 \begin{widetext}
 \begin{equation}
-    E = E^{(0)} + \sum_{\alpha=1}^N E_{\alpha}^{(0)}\left( \vb{R}_{\alpha} \right) + \sum_{1 \leq \alpha \leq \beta \leq N}^N E_{\alpha, \beta}^{(1)}\left( \vb{R}_{\alpha}, \vb{R}_{\beta} \right) + \dots + \mathcal{F}\left[m^{(T)}\left(\vb{R}_{\alpha_1}, \dots, \vb{R}_{\alpha_N}\right)\right],
+    E(\{\vb{R}_\alpha\}, \bm{\mathcal{E}}) = E^{(0)}(\bm{\mathcal{E}}) + \sum_{\alpha=1}^N E_{\alpha}^{(0)}\left( \vb{R}_{\alpha};\  \bm{\mathcal{E}} \right) + \sum_{1 \leq \alpha \leq \beta \leq N}^N E_{\alpha, \beta}^{(1)}\left( \vb{R}_{\alpha}, \vb{R}_{\beta};\ \bm{\mathcal{E}} \right) + \dots + \mathcal{F}\left[m^{(T)}\left(\vb{R}_{\alpha_1}, \dots, \vb{R}_{\alpha_N};\  \bm{\mathcal{E}}\right)\right],
 \end{equation}  
 \end{widetext}
-where $\mathcal{F}$ is a general non-linear term (here evaluated using a MLP) that accounts for excluded higher-body terms.
+where $\mathcal{F}$ is a general, learnable non-linear term (here evaluated using a MLP) that accounts for excluded higher-order terms.
 
-The presence of the electric field in the MLP allows for higher order terms in the electric field too, $\mathcal{E}^2,\ \mathcal{E}^3, \dots$, so the Born effective charges ($Z^*_{\alpha,ij}$) and the polarisability ($\alpha_{ij}$) may be derived from derivatives of the polarisation with atomic position and the electric field respectively,
+The most general expansion of $E$ to second order in $\bm{\mathcal{E}}$, and to all orders in $\vb{R}_{\alpha}$, is
+\begin{equation}
+\begin{aligned}
+    \Tilde{E}(\{\vb{R}_\alpha\}, \bm{\mathcal{E}}) &\simeq E_0(\{\vb{R}_\alpha\}) \\
+    &- \Omega\ \bm{\mathcal{E}} \cdot \vb{P}_0(\{\vb{R}_\alpha\}) \\
+    &- \frac{\Omega}{8\pi}\ \bm{\mathcal{E}} \cdot \bm{\varepsilon}(\{\vb{R}_\alpha\}) \cdot \bm{\mathcal{E}},
+\end{aligned}
+\end{equation}
+where $\vb{P}_0(\{\vb{R}_\alpha\})$ is the macroscopic polarisation in zero field (or the  ``built-in'' polarisation), and $\bm{\varepsilon}(\{\vb{R}_\alpha\})$ is the macroscopic (optical) dielectric tensor. For most materials, $\vb{P}_0(\{\vb{R}_\alpha\}) = 0$, but this is not true for ferroelectric materials which have a finite polarisation even with no external field.
+
+The generalised force $\vb{F}_\beta$ from displacing atom $\beta$ is obtained as a conjugate variable,
+\begin{equation}
+\begin{aligned}
+    \vb{F}_{\beta}(\{\vb{R}_\alpha\}, \bm{\mathcal{E}}) &= -\frac{1}{\Omega} \grad_{\vb{R}_{\beta}} \Tilde{E}(\{\vb{R}_\alpha\}, \bm{\mathcal{E}}) \\
+    &= -\frac{1}{\Omega} \grad_{\vb{R}_{\beta}} E_0(\{\vb{R}_\alpha\}) \\
+    &\quad\ + \bm{\mathcal{E}} \cdot \grad_{\vb{R}_{\beta}} \vb{P}_0(\{\vb{R}_\alpha\}) \\
+    &\quad\ + \frac{1}{8\pi}\ \bm{\mathcal{E}} \cdot \grad_{\vb{R}_{\beta}} \bm{\varepsilon}(\{\vb{R}_\alpha\}) \cdot \bm{\mathcal{E}}.
+\end{aligned}
+\end{equation}
+Likewise, we may derive the electric displacement field $\vb{D}(\{\vb{R}_\alpha\}, \bm{\mathcal{E}})$,
+\begin{equation}
+\begin{aligned}
+    \vb{D}(\{\vb{R}_\alpha\}, \bm{\mathcal{E}}) &= -4\pi \grad_{\bm{\mathcal{E}}} \vb{F}_{\beta}(\{\vb{R}_\alpha\}, \bm{\mathcal{E}}) \\
+    &= \bm{\varepsilon}(\{\vb{R}_\alpha\}) \cdot \bm{\mathcal{E}} + 4\pi \vb{P}_0(\{\vb{R}_\alpha\}),
+\end{aligned}
+\end{equation}
+which relates the macroscopic polarisation in a finite electric field $\vb{P}(\{\vb{R}_\alpha\}, \bm{\mathcal{E}})$ to one in zero field $\vb{P}_0(\{\vb{R}_\alpha\})$,
+\begin{equation}
+    \vb{P}(\{\vb{R}_\alpha\}, \bm{\mathcal{E}}) = \vb{P}_0(\{\vb{R}_\alpha\}) + \alpha(\{\vb{R}_\alpha\}) \cdot  \bm{\mathcal{E}},
+\end{equation}
+where $\alpha = (\varepsilon - 1) / 4\pi$ is the macroscopic polarisability tensor.
+
+The presence of the electric field in the non-linear function (the MLP) means that we account for higher order terms in the electric field too, $\mathcal{E}^3, \mathcal{E}^4 \dots$. Therefore, we account for non-linear susceptibilities,
+\begin{equation}
+\begin{aligned}
+    \vb{P}(\{\vb{R}_\alpha\}, \bm{\mathcal{E}}) &= -\frac{1}{\Omega} \grad_{\bm{\mathcal{E}}} E(\{\vb{R}_\alpha\}, \bm{\mathcal{E}}) \\
+    &= \vb{P}_0(\{\vb{R}_\alpha\}) + \chi^{(1)}(\{\vb{R}_\alpha\}) \cdot  \bm{\mathcal{E}} \\
+    &+ \bm{\mathcal{E}} \cdot \chi^{(2)}(\{\vb{R}_\alpha\}) \cdot  \bm{\mathcal{E}} + \dots,
+\end{aligned}
+\end{equation}
+where we see that the polarisability is the linear susceptibility term, $\chi^{(1)} \equiv \alpha$.
+
+The Born effective charges ($Z^*_{\alpha,ij}$) and the polarisability tensor ($\alpha_{ij}$) may then be derived from derivatives of the polarisation with respect to atom position and the electric field, respectively,
 \begin{subequations}
 \begin{align}
-    P_i &= -\frac{1}{\Omega} \frac{\partial E}{\partial \mathcal{E}_i} \\
     \alpha_{ij} &= - \frac{1}{\Omega} \frac{\partial^2 E}{\partial \mathcal{E}_i\ \partial \mathcal{E}_j} = \frac{\partial P_i}{\partial \mathcal{E}_j} \\
     Z^*_{\alpha, ij} &= -\frac{1}{e}\frac{\partial^2 E}{\partial \mathcal{E}_i\ \partial R_{\alpha,j}} = \frac{1}{e} \frac{\partial F_i}{\partial \mathcal{E}_j} = \frac{\Omega}{e} \frac{\partial P_i}{\partial R_{\alpha, j}}.
 \end{align}
@@ -151,6 +188,10 @@ The presence of the electric field in the MLP allows for higher order terms in t
 \subsection{Loss}
 
 \section{Results}\label{section: results}
+
+\subsection{Polarisation of Ferroelectric Materials}
+
+\subsection{BEC and Polarisability of Dielectric Crystals}
 
 \bibliography{bibliography}
 
