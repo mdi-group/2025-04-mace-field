@@ -178,14 +178,27 @@ The presence of the electric field in the non-linear function (the MLP) means th
 where we see that the polarisability is the linear susceptibility term, $\chi^{(1)} \equiv \alpha$.
 
 The Born effective charges ($Z^*_{\alpha,ij}$) and the polarisability tensor ($\alpha_{ij}$) may then be derived from derivatives of the polarisation with respect to atom position and the electric field, respectively,
-\begin{subequations}
-\begin{align}
-    \alpha_{ij} &= - \frac{1}{\Omega} \frac{\partial^2 E}{\partial \mathcal{E}_i\ \partial \mathcal{E}_j} = \frac{\partial P_i}{\partial \mathcal{E}_j} \\
-    Z^*_{\alpha, ij} &= -\frac{1}{e}\frac{\partial^2 E}{\partial \mathcal{E}_i\ \partial R_{\alpha,j}} = \frac{1}{e} \frac{\partial F_i}{\partial \mathcal{E}_j} = \frac{\Omega}{e} \frac{\partial P_i}{\partial R_{\alpha, j}}.
-\end{align}
-\end{subequations}
+\begin{equation}
+    \alpha_{ij} = - \frac{1}{\Omega} \frac{\partial^2 E}{\partial \mathcal{E}_i\ \partial \mathcal{E}_j} = \frac{\partial P_i}{\partial \mathcal{E}_j}
+\end{equation}
+
+\begin{equation}
+\begin{aligned}
+    Z^*_{\alpha, ij} &= -\frac{1}{e}\frac{\partial^2 E}{\partial \mathcal{E}_i\ \partial R_{\alpha,j}}\bigg\rvert_{\bm{\mathcal{E}}=\vb{0}} \\
+    &= \frac{1}{e} \frac{\partial F_i}{\partial \mathcal{E}_j}\bigg\rvert_{\bm{\mathcal{E}}=\vb{0}} = \frac{\Omega}{e} \frac{\partial P_i}{\partial R_{\alpha, j}}\bigg\rvert_{\bm{\mathcal{E}}=\vb{0}}.
+\end{aligned}
+\end{equation}
 
 \subsection{Loss}
+
+\begin{widetext}
+\begin{equation}
+\begin{aligned}
+    \Delta \mathcal{L} &= \frac{\lambda_P}{3 B} \sum_{b=1}^{B} \sum_{i=1}^3 \left(\left[-\frac{1}{\Omega}\frac{\partial E_b^{(\text{pred})}}{\partial \mathcal{E}_i} - P^{(\text{ref})}_{b,i}\right] \text{mod}\ \Delta P_{b,i} \right)^2 + \frac{\lambda_Z}{9 B N} \sum_{\alpha=1}^{B \cdot N} \sum_{i=1}^3 \sum_{j=1}^3 \left(-\frac{1}{e}\frac{\partial^2 E^{(\text{pred})}}{\partial \mathcal{E}_i\ \partial R_{\alpha,j}} - Z^{* (\text{ref})}_{\alpha, ij} \right)^2 \\
+    &+ \frac{\lambda_\alpha}{9 B} \sum_{b=1}^{B} \sum_{i=1}^3 \sum_{j=1}^3 \left(-\frac{1}{\Omega}\frac{\partial^2 E_b^{(\text{pred})}}{\partial \mathcal{E}_i\ \partial \mathcal{E}_j} - \alpha^{(\text{ref})}_{b,ij} \right)^2
+\end{aligned}
+\end{equation}
+\end{widetext}
 
 \section{Results}\label{section: results}
 
