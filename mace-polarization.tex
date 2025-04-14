@@ -1,0 +1,158 @@
+% REVTeX guide: https://www.ctan.org/tex-archive/macros/latex/contrib/revtex
+\documentclass[aps,physrev,graphicx,amsmath,amssymb,reprint]{revtex4-2} % Two-column 'reprint'
+%\documentclass[aps,physrev,graphicx,amsmath,amssymb,linenumbers,preprint]{revtex4-2}
+
+% PACKAGES
+\usepackage{graphicx}
+\usepackage{subfig}
+\usepackage{physics}
+\usepackage{mathtools}
+\usepackage[version=3]{mhchem} % Formula subscripts using \ce{}
+\usepackage{dcolumn} % Align table columns on decimal point
+\usepackage{bm} % bold math
+\usepackage{xcolor}
+\usepackage{siunitx}
+\usepackage[font=small,labelfont=bf,
+   justification=Justified,
+   singlelinecheck=off,
+   format=plain]{caption} % 'format=plain' avoids hanging indentation
+\usepackage{parskip}
+
+% MATH TIDBITS
+\DeclarePairedDelimiter\ceil{\lceil}{\rceil}
+\DeclarePairedDelimiter\floor{\lfloor}{\rfloor}
+
+% COMMANDS
+\newcolumntype{d}[1]{D{.}{\cdot}{#1}}
+
+% FONT OPTIONS; mainly to break monotony when doing rounds of edits
+\usepackage{mathpazo}
+
+\begin{document}
+\title{
+Macroscopic Electric Polarization in MACE Machine Learned Interatomic Potentials
+}
+\date{\today} % useful to track hard copy of drafts
+
+\author{Bradley A. A. Martin}
+\author{Keith T. Butler}
+\email[Electronic mail: ]{k.t.butler@ucl.ac.uk}
+
+\affiliation{Department of Chemistry, University College London, Gower Street, London, WC1E 6BT, UK}
+
+\author{Another A. Author}
+\affiliation{Department, Other University, Road, City, Postcode, Country}
+
+\keywords{key, word}
+
+\begin{abstract}
+    
+\end{abstract}
+
+\maketitle 
+
+\section{Introduction}\label{section: introduction}
+
+Predicting the macroscopic electric response of crystals is currently a computationally intensive process due to the inherent quantum nature of polarisation. In the Modern Theory of Polarisation, the polarisation is derived from a geometric quantum ``Berry'' phase, and is ill-defined within a periodic crystal. Therefore, the calculation of macroscopic physical properties from derivatives of the polarisation, such as dielectric permittivity and effective charges, often requires numerous expensive electronic structure calculations to determine the polarisation difference between two crystal states, e.g. a non-polar centro-symmetric state and a polar ferroelectric state. We are then limited to small-scale simulation by the scaling of computation cost. 
+
+\textcolor{blue}{Introduction to ferroelectric materials and applications. Spontaneous polarisation.}
+
+\textcolor{blue}{Description of development and application of Machine learned force fields. Introduce ACE and MACE.}
+
+
+In this study we extend the MACE architecture to respond to an external electric field, which couples to a polarisation feature in the model. Existing approaches (Allegro, CACE, LES etc.) focused on select materials (BaTiO3, bulk water etc.), here we train our model on ~5000 different polar crystal materials to predict polarisation, Born Effective Charge (BEC) and polarisability.
+
+\section{Theory}\label{section: theory}
+
+\begin{itemize}
+    \item Introduce a brief overview of modern approach of polarisation (King-Smith \& Vanderbilt, and Resta).
+    \item How electronic structure methods (DFPT) implement polarisation and the electric enthalpy (Nunes \& Gonze and  Souza, Íñiguez, \& Vanderbilt).
+    \item How macroscopic properties, BECs \& polarisability etc., defined (derivatives of energy w.r.t positions, electric field etc.).
+    \item Theory behind ferroelectric materials and spontaneous polarisation.
+    \item Relation to other notable macroscopic properties, e.g. dielectric constants, optical conductivity etc.
+\end{itemize}
+
+\begin{equation}
+    \vb{P} = \frac{1}{\mathcal{V}} \left[ -e \sum_{\alpha} Z_\alpha \vb{R}_\alpha + \int d\vb{r}\ \vb{r}\ \rho(\vb{r}) \right]
+\end{equation}
+
+\begin{equation}
+    \Delta \vb{P} = \Delta \vb{P}_{\text{ion}} + \Delta \vb{P}_{\text{el}}
+\end{equation}
+
+\begin{equation}
+    \Delta \vb{P}_{\text{el}} = \frac{1}{\mathcal{V}} \int d\vb{r}\ \vb{r}\ \rho(\vb{r})
+\end{equation}
+
+\begin{equation}
+    \vb{P}_\alpha = \frac{2 e}{\Omega} \vb{R}_\alpha
+\end{equation}
+
+\begin{equation}
+    E\left[\left\{\psi^{(\bm{\mathcal{E}})}\right\}, \bm{\mathcal{E}}\right] = E_0\left[\left\{ \psi^{(\bm{\mathcal{E}})} \right\}\right] - \Omega\ \bm{\mathcal{E}} \cdot \vb{P}\left[\left\{ \psi^{(\bm{\mathcal{E}})} \right\}\right]
+\end{equation}
+
+\section{Methods}\label{section: methods}
+
+\subsection{Architecture}
+
+Our approach inherits most of the original MACE architecture. The primary alteration is in the readout blocks where we include an additional energy term, $-\vb{P} \cdot \bm{\mathcal{E}}$, in analogy to the electric enthalpy functional from Density Functional Perturbation Theory.
+\begin{widetext}
+\begin{equation}
+\begin{aligned}
+    E_\alpha & = E_\alpha^{(0)} + E_\alpha^{(1)} + \dots + E_\alpha^{(T)}, \qquad \text{where}, \\ \\
+    E_\alpha(t) &= \mathcal{R}_t\left(\vb{h}_i^{(t)}\right) = 
+    \begin{cases}
+    \begin{aligned}
+        &\sum_{\Tilde{k}} W_{\text{readout}, \Tilde{k}}^{(t)} \left[ h_{\alpha,\Tilde{k} 0 0}^{e, (t)} - \vb{p}_{\alpha, \Tilde{k}}^{(t)} \cdot \bm{\mathcal{E}} \right] \qquad\ \text{if}\ t<T, \\
+        &\text{MLP}_{\text{readout}}^{(t)}\left( \left\{ h_{\alpha,k 0 0}^{e, (t)} - \vb{p}_{\alpha, k}^{(t)} \cdot \bm{\mathcal{E}} \right\}_{k} \right) \quad \text{if}\ t = T.
+    \end{aligned}
+    \end{cases}
+\end{aligned}
+\end{equation}
+\end{widetext}
+To preserve higher-order tensorial information for the final readout blocks, we allow $l>0$ spherical harmonic features in the final layers of the interaction and product blocks.
+
+After the higher body-order node features are produced, we map them to two scalar features and one vector feature which we may relate to the local node energy, charge and electronic dipole moment,
+\begin{equation}
+    \left[ h_{\alpha, k 0 0}^{e, (t)},\ h_{\alpha, k 0 0}^{q, (t)},\ h_{\alpha, k 1 m}^{(t)} \right] = \sum_{l \Tilde{m}} W^{l \Tilde{m}}_{0 0, 1 m} h^{(t)}_{\alpha,kl\Tilde{m}}.
+\end{equation}
+Note that these are not complete readouts yet as we have not yet mixed the $k$ channels. We then define a total dipole moment feature as,
+\begin{equation}
+    \vb{p}^{(t)}_{\alpha,k} = h^{q,(t)}_{\alpha,k 0 0} \vb{R}_{\alpha} - \vb{h}^{(t)}_{\alpha,k 1},
+\end{equation}
+where the first term represents the atomic dipole contribution. This `total dipole' acts as an atomic decomposition of the total macroscopic polarisation and contributes to the total energy dotted with the external electric field.
+
+\begin{equation}
+\begin{aligned}
+    E(\{Z_\alpha, \vb{R}_\alpha\}, \bm{\mathcal{E}}) &\simeq E_0(\{Z_\alpha, \vb{R}_\alpha\}) - \Omega\ \bm{\mathcal{E}} \cdot \vb{P}(\{Z_\alpha, \vb{R}_\alpha\}) \\
+    &- \frac{\Omega}{2}\ \bm{\mathcal{E}} \cdot \bm{\alpha}(\{Z_\alpha, \vb{R}_\alpha\}) \cdot \bm{\mathcal{E}}
+\end{aligned}
+\end{equation}
+
+\subsection{Derivative Macroscopic Properties}
+
+\begin{widetext}
+\begin{equation}
+    E = E^{(0)} + \sum_{\alpha=1}^N E_{\alpha}^{(0)}\left( \vb{R}_{\alpha} \right) + \sum_{1 \leq \alpha \leq \beta \leq N}^N E_{\alpha, \beta}^{(1)}\left( \vb{R}_{\alpha}, \vb{R}_{\beta} \right) + \dots + \mathcal{F}\left[m^{(T)}\left(\vb{R}_{\alpha_1}, \dots, \vb{R}_{\alpha_N}\right)\right],
+\end{equation}  
+\end{widetext}
+where $\mathcal{F}$ is a general non-linear term (here evaluated using a MLP) that accounts for excluded higher-body terms.
+
+The presence of the electric field in the MLP allows for higher order terms in the electric field too, $\mathcal{E}^2,\ \mathcal{E}^3, \dots$, so the Born effective charges ($Z^*_{\alpha,ij}$) and the polarisability ($\alpha_{ij}$) may be derived from derivatives of the polarisation with atomic position and the electric field respectively,
+\begin{subequations}
+\begin{align}
+    P_i &= -\frac{1}{\Omega} \frac{\partial E}{\partial \mathcal{E}_i} \\
+    \alpha_{ij} &= - \frac{1}{\Omega} \frac{\partial^2 E}{\partial \mathcal{E}_i\ \partial \mathcal{E}_j} = \frac{\partial P_i}{\partial \mathcal{E}_j} \\
+    Z^*_{\alpha, ij} &= -\frac{1}{e}\frac{\partial^2 E}{\partial \mathcal{E}_i\ \partial R_{\alpha,j}} = \frac{1}{e} \frac{\partial F_i}{\partial \mathcal{E}_j} = \frac{\Omega}{e} \frac{\partial P_i}{\partial R_{\alpha, j}}.
+\end{align}
+\end{subequations}
+
+\subsection{Loss}
+
+\section{Results}\label{section: results}
+
+\bibliography{bibliography}
+
+\end{document}
+
