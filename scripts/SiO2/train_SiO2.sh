@@ -1,0 +1,49 @@
+
+torchrun --standalone --nproc_per_node="gpu" ../../mace/cli/run_train.py \
+    --name="MACE-field-SiO2-newnew" \
+    --train_file="SiO2-preprocessed.xyz" \
+    --valid_fraction=0.20 \
+    --E0s="average" \
+    --loss='universal_field' \
+    --energy_weight=1.0 \
+    --forces_weight=50.0 \
+    --stress_weight=1.0 \
+    --becs_weight=250.0 \
+    --polarisability_weight=500.0 \
+    --polarisation_weight=100.0 \
+    --compute_polarisation=True \
+    --compute_becs=True \
+    --compute_polarisability=True \
+    --compute_forces=True \
+    --compute_stress=True \
+    --eval_interval=1 \
+    --error_table='PerAtomRMSEstressvirialsfield' \
+    --model="ScaleShiftFieldMACE" \
+    --interaction_first="RealAgnosticResidualInteractionBlock" \
+    --interaction="RealAgnosticResidualInteractionBlock" \
+    --num_interactions=2 \
+    --correlation=3 \
+    --r_max=5.0 \
+    --max_L=1 \
+    --max_ell=3 \
+    --num_channels=64 \
+    --num_radial_basis=10 \
+    --MLP_irreps="16x0e" \
+    --num_workers=1 \
+    --lr=0.01 \
+    --weight_decay=1e-8 \
+    --ema \
+    --ema_decay=0.995 \
+    --scheduler_patience=10 \
+    --max_num_epochs=1000 \
+    --amsgrad \
+    --distributed \
+    --device="cuda" \
+    --enable_cueq True \
+    --seed=23 \
+    --default_dtype="float64" \
+    --save_cpu \
+    --batch_size 4 \
+    --valid_batch_size 4 \
+    --restart_latest \
+    --plot=True \
