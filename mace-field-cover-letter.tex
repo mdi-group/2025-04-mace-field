@@ -1,0 +1,38 @@
+\documentclass[a4paper]{letter}  % or article, etc.
+\usepackage[margin=2.5cm]{geometry}  % uniform margins on all sides
+
+\begin{document}
+Dear Editors,
+
+
+We are pleased to submit our manuscript entitled “General Learning of the Electric Response of Inorganic Materials” for consideration at Nature Computational Science.
+
+
+Background and context.
+
+
+Electric response underpins a wide range of functional materials, from ferroelectrics and piezoelectrics to dielectrics and nonlinear optical crystals. In periodic solids, however, key observables such as polarisation, Born effective charges, and dielectric tensors are Berry-phase quantities that are expensive to compute. First-principles approaches such as density-functional perturbation theory and finite-field Berry-phase methods provide rigorous access to these properties but remain too costly for large-scale screening or long finite-field simulations. Machine-learning interatomic potentials offer acceleration, yet most models target only energies, forces, or stress, and existing field-aware approaches are typically single-material rather than reusable cross-chemistry models.
+
+
+What this study addresses.
+
+
+In this work, we introduce MACE-Field, a field-aware equivariant interatomic potential that learns a single electric enthalpy functional whose derivatives yield polarisation, Born effective charges, and dielectric response. Our physics-informed architecture couples a uniform electric field into the latent features of a standard MACE backbone, enabling existing foundation models to be upgraded to field-aware ones with minimal change. By fine-tuning a publicly available MACE model on a combination of DFPT dielectric data, ferroelectric distortion paths, and molecular-dynamics snapshots, we obtain a general field-aware model, MACE-Field-MP-0. We show that it accurately predicts polarisation branches and spontaneous polarisations in ferroelectrics, reproduces Born effective charges and dielectric constants, and drives finite-field molecular dynamics that captures BaTiO$_3$ hysteresis and the IR/Raman and dielectric spectra of $\alpha$-quartz in close agreement with first-principles benchmarks and single-material Allegro-pol models.
+
+
+Why Nature Computational Science?
+
+
+Our study aligns with Nature Computational Science’s focus on physics-informed machine learning and equivariant neural networks. MACE-Field is a physics-informed, equivariant model where field–feature coupling mirrors the multipole expansion of electrostatics and linear electric response: polarisation, effective charges, and dielectric tensors all emerge as consistent derivatives of a single enthalpy functional. This embeds key physical constraints directly into the network, improving robustness and generalisation across inorganic chemistries and providing a reusable, multi-task model and practical, data-driven tools for electric-field phenomena that link static DFPT data to dynamic finite-field simulations.
+
+
+We believe this work will be of broad interest to researchers in computational materials science, ferroelectrics and functional oxides, machine-learning interatomic potentials, and scientific machine learning. Thank you for considering our submission. We look forward to your feedback.
+
+
+Yours faithfully,
+
+
+Keith T. Butler
+
+
+\end{document}

@@ -1,0 +1,347 @@
+\documentclass[aps,physrev,graphicx,amsmath,amssymb,reprint]{revtex4-2} % Two-column 'reprint'
+
+% PACKAGES
+\usepackage{graphicx}
+\usepackage{subfigure}
+\usepackage{physics}
+\usepackage{mathtools}
+\usepackage[version=3]{mhchem} % Formula subscripts using \ce{}
+\usepackage{dcolumn} % Align table columns on decimal point
+\usepackage{bm} % bold math
+\usepackage{xcolor}
+\usepackage{siunitx}
+\usepackage[font=small,labelfont=bf,
+   justification=Justified,
+   singlelinecheck=off,
+   format=plain]{caption} % 'format=plain' avoids hanging indentation
+\sisetup{math-micro=\text{µ},text-micro=µ}
+\usepackage{parskip}
+\usepackage{booktabs}
+\usepackage{hyperref}
+ 
+% MATH TIDBITS
+\DeclarePairedDelimiter\ceil{\lceil}{\rceil}
+\DeclarePairedDelimiter\floor{\lfloor}{\rfloor}
+
+% COMMANDS
+\newcolumntype{d}[1]{D{.}{\cdot}{#1}}
+
+% FONT OPTIONS; mainly to break monotony when doing rounds of edits
+\usepackage{mathpazo}
+
+\title{Supplementary Information for\\
+\textit{General Learning of the Electric Response of Inorganic Materials}}
+
+\begin{document}
+\maketitle
+
+\section*{Supplementary Information (SI)}
+
+\subsection*{S1. Training configurations for \texttt{MACE-Field}}
+
+\begin{table*}[t]
+  \centering
+  \small
+  \caption{Training setups and loss weights for the four experiments.}
+  \label{tab:training_setups}
+  \begin{tabular}{@{}l l l c c c c c c c c c c c@{}}
+  \toprule
+  Experiment & Data split & Channels &
+  \multicolumn{6}{c}{Loss weights} & \multicolumn{4}{c}{Optimiser / schedule} & Seed \\
+   & & & $w_E$ & $w_F$ & $w_\sigma$ & $w_P$ & $w_{Z^*}$ & $w_{\alpha}$ & LR & Epochs$_\text{max}$ & Patience & Batch &  \\
+  \midrule
+  Fine-tuned & 80/10/10 &
+  128 & 1.0 & 100.0 & 1.0 & 100.0 & 100.0 & 100.0 & 0.0001 & 300 & 50 & 1 & 23 \\
+  Ferroelectrics & 80/10/10 &
+  128 & 1.0 & 10.0 & 0.0 & 100.0 & 0.0 & 0.0 & 0.005 & 250 & 50 & 2 & 23 \\
+  BaTiO$_3$ MD & valid 20\% &
+  64 & 1.0 & 100.0 & 1.0 & 1.0 & 50.0 & 10.0 & 0.005 & 1000 & 100 & 4 & 23 \\
+  $\alpha$-SiO$_2$ MD & valid 20\% &
+  64 & 1.0 & 50.0 & 1.0 & 10.0 & 100.0 & 200.0 & 0.01 & 1000 & 100 & 8 & 23 \\
+  \bottomrule
+  \end{tabular}
+\end{table*}
+
+We trained four models with the \texttt{run\_train.py} CLI (DDP via \texttt{torchrun}; double precision). All runs used the
+\texttt{MACEField} backbone with field injection at each interaction block (\texttt{--enable\_cueq True}),
+branch-invariant polarisation loss enabled (\texttt{--compute\_* True}), and Adam with EMA (\texttt{--ema} with
+decay~0.995), cosine/plateau schedule (\texttt{--scheduler\_patience} as listed), weight decay $10^{-8}$, and checkpoints on CPU.
+Atomic baselines were set to the dataset average (\texttt{--E0s average}). Errors are reported with the
+\texttt{PerAtomRMSEstressvirialsfield} table. Learning rates and early-stopping patience are per-experiment.
+\\
+
+\paragraph*{Shared architecture.} We use \texttt{RealAgnosticResidualInteractionBlock} as first/inner interaction; 2 interaction layers; correlation order~3; cutoff $r_\text{max}=5$~\AA; $L_{\max}=1$; $\ell_{\max}=3$; 10 radial basis; MLP readout \texttt{16x0e};
+mixed residual field coupling; scalar ($L{=}0$) readout. Ferroelectric and dielectric models use 128 channels;
+single-material MD models (BaTiO$_3$, $\alpha$-SiO$_2$) use 64 channels to compare to \texttt{Allegro-pol}, which also used 64 channels.
+\\
+
+\paragraph*{Optimisation and precision.}
+Default dtype \texttt{float64}; AMSGrad enabled; gradient EMA; evaluation each epoch
+(\texttt{--eval\_interval 1}). Seeds are recorded per run below. Batch sizes are chosen to saturate GPU memory.
+\\
+
+\paragraph*{Command lines.}
+For reproducibility, we executed each run with \texttt{torchrun --standalone --nproc\_per\_node="gpu"} and
+\texttt{--distributed} enabled. The exact CLI flags (data files, weights, and optimiser settings) match those listed in
+Table~\ref{tab:training_setups}; full commands are included in the code repository under \texttt{scripts/}.
+
+\subsection*{S2. Data curation and splits}
+
+\paragraph*{Ferroelectric paths.} For each material, we generate 10 evenly spaced interpolates (fixed cell, fractional-coordinate interpolation) between non-polar and polar endpoints. All frames for a given material (including endpoints) are kept within the \emph{same} split to avoid leakage across near-duplicates.
+\\
+
+\paragraph*{Dielectric/BEC set.} We restrict to insulating DFPT entries (GGA-PBE). Forces/stresses from this export are not used for training. Splits are made at the MP identifier level, so supercells, symmetry equivalents, or small perturbations of the same MP ID do not cross splits.
+
+\subsection*{S3. Autograd and folding recipes (as used in code)}
+
+All derivatives are computed on the \emph{interaction} energy (atomic baselines are constant):
+
+\begin{align}
+\Omega\,\mathbf P &= -\frac{\partial \mathcal F}{\partial \mathbf E},
+\quad
+Z^*_{\kappa,ij} = \frac{\partial (\Omega P_i)}{\partial u_{\kappa j}},
+\quad
+\alpha_{ij} = \frac{\partial P_i}{\partial E_j}.
+\end{align}
+
+In PyTorch:
+\begin{verbatim}
+# Polarisation (per graph)
+polar = - torch.autograd.grad(
+    outputs=[inter_e], 
+    inputs=[E], 
+    grad_outputs=[torch.ones_like(inter_e)],
+    retain_graph=True, 
+    create_graph=True
+)[0]
+
+# BECs (stack component-wise)
+becs = []
+for d in range(3):
+    comp = polar[:, d]
+    g = torch.autograd.grad(
+        outputs=[comp], 
+        inputs=[positions],
+        grad_outputs=[torch.ones_like(comp)],
+        retain_graph=True, create_graph=True
+    )[0]
+    becs.append(g)
+# [n_atoms, 3, 3]
+becs = torch.stack(becs, dim=1)   
+
+# Polarisability
+alphas = []
+for d in range(3):
+    comp = polar[:, d]
+    g = torch.autograd.grad(
+        outputs=[comp], 
+        inputs=[E],
+        grad_outputs=[torch.ones_like(comp)],
+        retain_graph=True, 
+        create_graph=True
+    )[0]
+    alphas.append(g)
+# [n_graphs, 3, 3]
+alpha = torch.stack(alphas, dim=1)  
+\end{verbatim}
+\par\addvspace{.75\baselineskip}
+\paragraph*{Polarisation folding.} Differences between reference and predicted polarisations are defined only up to the polarisation lattice. We implement modulo folding as:
+\begin{verbatim}
+x = torch.einsum(
+    "bi,bij->bj", 
+    dP, 
+    torch.linalg.inv(Q)
+)
+x_round = torch.round(x)
+dP_fold = torch.einsum(
+    "bi,bij->bj", 
+    x - x_round, 
+    Q
+)
+\end{verbatim}
+
+\subsection*{S4. Finite-field MD and spectroscopy protocols}
+
+\paragraph*{General MD settings.}
+All simulations were performed in ASE using a Langevin thermostat (friction $0.1~\mathrm{ps}^{-1}$) with
+Maxwell--Boltzmann initialisation followed by \texttt{Stationary} and \texttt{ZeroRotation}. Unless stated otherwise,
+we used timesteps $\Delta t=1$--2\,fs and periodic boundary conditions. At each MD step we log the total energy per atom,
+temperature, full stress tensor, lattice lengths/angles, the (possibly time-dependent) uniform field
+$\mathbf E(t)$, and the derivative observables returned by the \texttt{MACEField} calculator:
+polarisation $\mathbf P(t)$, Born effective charges $Z^*(t)$ and polarisability $\boldsymbol\alpha(t)$. Trajectories are
+written in XYZ with these quantities stored in the \texttt{info}/\texttt{arrays} fields
+(\texttt{MACE\_electric\_field}, \texttt{MACE\_polarisation}, \texttt{MACE\_becs}, \texttt{MACE\_polarisability}).
+\\
+
+\paragraph*{Autocorrelations and spectra.}
+Given $\Delta t$ and $N$ frames ($t_n=n\Delta t$), we form the normalised autocorrelations
+\[
+C_P(t)=\frac{\sum_i\langle P_i(t)P_i(0)\rangle}{\sum_i\mathrm{Var}[P_i]},\qquad
+C_\alpha(t)=\frac{\sum_{ij}\langle \alpha_{ij}(t)\alpha_{ij}(0)\rangle}{\sum_i\mathrm{Var}[\alpha_{ii}]},
+\]
+obtain the one-sided spectra $\mathrm{Re}\,S_P(\omega)$ and $\mathrm{Re}\,S_\alpha(\omega)$ by rFFT (Hann window), and
+compute
+\[
+\mathrm{IR}(\omega)\propto \omega^2\,\mathrm{Re}\,S_P(\omega),\qquad
+\mathrm{Raman}(\omega)\propto \omega^2\,\mathrm{Re}\,S_\alpha(\omega),
+\]
+with Gaussian broadening $\sigma=20~\mathrm{cm}^{-1}$ for presentation. During analysis, $\mathbf P(t)$ is folded at each
+step onto the principal branch of the polarisation lattice (branch-invariant wrapping).
+\\
+
+\paragraph*{Dielectric constants from fluctuations.}
+Directional components are obtained from time averages and fluctuations
+\[
+\varepsilon_{\infty,i}=1+\frac{4\pi}{\varepsilon_0}\,\langle \alpha_{ii}\rangle,\qquad
+\varepsilon_{0,i}=\varepsilon_{\infty,i}+\frac{4\pi}{\varepsilon_0}\,\frac{\Omega\,\mathrm{Var}[P_i]}{k_BT},
+\]
+and we plot $\bar\varepsilon_\infty=\tfrac13\sum_i\varepsilon_{\infty,i}$ and
+$\bar\varepsilon_0=\tfrac13\sum_i\varepsilon_{0,i}$ as horizontal guides in $\mathrm{Re}\,\varepsilon(\omega)$.
+\\
+
+\paragraph*{Frequency-dependent $\varepsilon(\omega)$.}
+From $S_{P,i}(\omega)$ we construct
+\[
+\varepsilon_i(\omega)\approx 1+\big(\varepsilon_{0,i}-1\big)
+\left[1-i\,\omega\,\frac{S_{P,i}(\omega)}{\mathrm{Var}[P_i]}\right],
+\]
+and report the Cartesian averages of $\mathrm{Re}\,\varepsilon(\omega)$ and the loss $-\mathrm{Im}\,\varepsilon(\omega)$.
+
+\subsubsection*{S4.1 BaTiO\texorpdfstring{$_3$}{3}: finite-field hysteresis}
+
+\textbf{Structure and calculator.}
+We fetched the tetragonal BaTiO$_3$ structure (Materials Project ID \texttt{mp-5986}) and built a $3{\times}3{\times}3$
+supercell. The field-aware calculator is \texttt{MACECalculator} with the \texttt{MACEField} model
+(\texttt{MACE-field-BaTiO3.model}; double precision).
+
+\textbf{Thermostat and timestep.}
+NVT (Langevin), $\Delta t=1$\,fs at $T=0$~\si{K} for dynamic loops; for quasi-static we cool from $300$~\si{K} down to $0$~\si{K} in steps of $50$~\si{K} whilst performing ionic relaxations at fixed field values on a grid along the polar axis.
+
+\textbf{Field protocol (dynamic loop).}
+We apply a gated sinusoid along $\hat{\mathbf z}$:
+\begin{align*}
+E_z(t) &= E_0 \sin\!\left(\frac{2\pi t}{T_\mathrm{per}}\right), \\
+E_0&=0.30~\mathrm{(eV/\AA)}, \\
+T_\mathrm{per}&=200~\text{steps},
+\end{align*}
+activated after initial equilibration and deactivated near the end to avoid start/stop transients (as in the script:
+field on for steps $100\!\le n\!\le 900$). The loop is sampled by logging $\{E_z(t),P_{x,y,z}(t)\}$ each MD step and
+plotting $P$ vs.\ $E$ to extract coercive fields and remanent polarisations.
+
+\textbf{Outputs.}
+Trajectories are written to \texttt{<system>\_traces/*.xyz} together with a nine-panel diagnostic plot showing energy,
+temperature, field components, $\mathbf P(t)$, $P$--$E$ scatter, selected $\alpha_{ij}(t)$, stresses, and lattice metrics.
+
+\subsubsection*{S4.2 $\alpha$-SiO\texorpdfstring{$_2$}{2}: IR/Raman and $\varepsilon(\omega)$ from MLMD}
+
+\textbf{Structure and calculator.}
+$\alpha$-quartz was retrieved as \texttt{mp-7000} and expanded to a $3{\times}3{\times}3$ supercell. We used the
+\texttt{MACE-field-SiO2.model} with \texttt{MACEField}.
+
+\textbf{Production MD.}
+Zero external field (equilibrium fluctuations), NVT at $T=300$~\si{K}. We used a timestep of $\Delta t=2$\,fs and ran a $200$\,ps
+trajectory. Logging is performed every step; all nine $\alpha_{ij}(t)$ components are stored.
+
+\textbf{Spectral analysis.}
+From the saved trajectory, we compute:
+(i) IR spectrum from the normalised $\dot{\mathbf P}$--$\dot{\mathbf P}$ (equivalently $P$--$P$) autocorrelation,
+(ii) Raman spectrum from the $\boldsymbol\alpha$--$\boldsymbol\alpha$ autocorrelation,
+(iii) $\varepsilon_\infty$ and $\varepsilon_0$ from $\langle\alpha_{ii}\rangle$ and $\mathrm{Var}[P_i]$,
+and (iv) the frequency-dependent dielectric function $\varepsilon(\omega)$ using the expression above.
+For presentation we apply Gaussian broadening ($\sigma=20~\mathrm{cm}^{-1}$) and plot IR, Raman, $\mathrm{Re}\,\varepsilon$,
+and the loss $-\mathrm{Im}\,\varepsilon$ on a shared $\omega$ axis.
+
+\subsection*{S5. Parities and training curves}
+
+Figure~\ref{fig:parities_and_curves} compiles learning curves and parity plots for the four models used throughout the paper: single-material BaTiO\textsubscript{3}, single-material $\alpha$-SiO\textsubscript{2}, the cross-chemistry ferroelectric model, and the cross-chemistry \texttt{MACE-Field-MP-0} foundation model.
+For each run (top panels), we show the training/validation loss versus epoch and the per-target RMSE traces (energy, forces, stress, polarisation $\mathbf P$, Born effective charges $Z^*$ and polarisability $\boldsymbol\alpha$; units follow the axes). The vertical black line marks the checkpoint used elsewhere in the manuscript.
+Bottom panels display predicted versus reference values on the train/validation (and, where applicable, test) splits with the $y{=}x$ guide. Tight clustering about the diagonal indicates low bias and good calibration.
+
+\textbf{Fine-tuned (cross-chemistry) foundation model.} This model is fine-tuned using multiple heads starting from the \texttt{MACE-MP-0b3} foundation model. Here, the loss targets are energies, forces and stresses from a replay set of 10000 materials sub-selected from MPtrj, Born effective charges and polarisabilities from MP-Dielectric and polarisations from MP-Ferroelectric.
+
+\textbf{Ferroelectric (cross-chemistry) model.} This model is trained on distortion-path structures with supervision on $(E,\mathbf F,\mathbf P)$ only. Parities for these quantities are tight across materials; $Z^*$ and $\boldsymbol\alpha$ (not included in the loss) show larger scatter, as expected, but remain physically reasonable due to derivative consistency of the learned enthalpy.
+
+\textbf{BaTiO\textsubscript{3}.} Trained on \emph{ab initio} MD frames with supervision on $(E,\mathbf F,\boldsymbol\sigma,\mathbf P,Z^*,\boldsymbol\alpha)$, the model converges smoothly and attains near-linear parities for all observables, enabling the finite-field hysteresis simulation in the main text.
+
+\textbf{$\alpha$-SiO\textsubscript{2}.} Trained analogously on $\alpha$-quartz trajectories, the model shows similarly steady convergence and diagonal parities for $\mathbf P$, $Z^*$ and $\boldsymbol\alpha$, supporting the IR/Raman and $\varepsilon(\omega)$ spectra reported in Fig.~\ref{fig:hyst_plus_spectra}.
+
+\begin{figure*}[t]
+\centering
+\subfigure[Fine-tuned (cross-chemistry) model]{%
+\includegraphics[width=.8\linewidth]{figures/mace-field-mp-0b3-medium-mh_run-123_train_pt_head.png}}
+\subfigure[Ferroelectric (cross-chemistry) model]{%
+\includegraphics[width=.8\linewidth]{figures/MACE-field-ferroelectrics_run-23_train_Default_stage_one.png}}
+\subfigure[BaTiO$_3$ model]{%
+\includegraphics[width=.8\linewidth]{figures/MACE-field-BaTiO3_run-23_train_Default_stage_one.png}}
+\subfigure[$\alpha$-SiO$_2$ model]{%
+\includegraphics[width=.8\linewidth]{figures/MACE-field-SiO2_run-23_train_Default_stage_one.png}}
+\caption{Training dynamics and parities for all models. \emph{Top of each subfigure:} total training/validation loss and per-target RMSE versus epoch; the vertical black line marks the selected checkpoint. \emph{Bottom:} parity plots for energy, forces, stress, polarisation, Born effective charges, and polarisability (train/validation/test splits as indicated in the legends; dashed line is $y{=}x$). Cross-chemistry ferroelectric model was trained on $E,\mathbf F,\mathbf P$ (MP-Ferroelectrics); fine-tuned model was trained on $E, \mathbf F, \sigma$ from sub-selected MPtrj replay, $\mathbf P$ from MP-Ferroelectric and $Z^*, \boldsymbol \alpha$ from MP-dielectric; single-material models use the full set.}
+\label{fig:parities_and_curves}
+\end{figure*}
+
+\subsection*{S6. Train, validation and test parities for \texttt{MACE-Field-MP-0}}
+
+To complement the main-text analysis of the fine-tuned \texttt{MACE-Field-MP-0} foundation model, 
+Figs.~\ref{fig:mp0_pol_parities}–\ref{fig:mp0_alpha_parities} show the full train/validation/test parities 
+for polarisation, Born effective charges, and electronic polarisability on the MP-Ferroelectric and 
+MP-Dielectric datasets.
+
+Figure~\ref{fig:mp0_pol_parities} reports the component-wise parities for Berry-phase polarisation 
+on the MP-Ferroelectric split. As discussed in the main text, the \texttt{MACE-Field-MP-0} model does not 
+recover polarisation as accurately as the directly trained polarisation model: the train split shows a 
+near-diagonal trend but with noticeable scatter at large $|\mathbf{P}|$, and the scatter increases in the 
+validation and test sets. This indicates that, within the multi-task fine-tuning of a pre-existing foundation 
+model, the folded polarisation loss does not receive sufficient effective capacity and weight to resolve fully 
+the branch structure of $\mathbf{P}$ across many materials, even though local response quantities such as 
+$Z^\ast$ and $\boldsymbol\alpha$ are well captured.
+
+In contrast, Figs.~\ref{fig:mp0_bec_parities} and~\ref{fig:mp0_alpha_parities} show that the same model 
+performs very well on the MP-Dielectric Born effective charges and polarisabilities. For $Z^\ast$, the train, 
+validation, and test splits all exhibit tight clustering around the $y{=}x$ line for both diagonal and 
+off-diagonal tensor components, with only a mild increase in scatter going from train to test. The behaviour 
+for $\boldsymbol\alpha$ is similar: diagonal components are reproduced with high fidelity and off-diagonal 
+components (an order of magnitude smaller in magnitude) are also well captured without obvious bias. The close 
+agreement between splits, together with the near-diagonal trends, suggests that \texttt{MACE-Field-MP-0} 
+generalises well across the MP-Dielectric chemistry and does not suffer from severe overfitting on these 
+DFPT labels.
+
+\begin{figure*}
+    \centering
+    \includegraphics[width=.25\linewidth]{figures/polarisation-2panel-parity-mh-train.pdf}
+    \includegraphics[width=.25\linewidth]{figures/polarisation-2panel-parity-mh-valid.pdf}
+    \includegraphics[width=.25\linewidth]{figures/polarisation-2panel-parity-mh-test.pdf}
+    \caption{\textbf{Polarisation parities for the fine-tuned \texttt{MACE-Field-MP-0} model on the MP-Ferroelectric dataset.}
+    Component-wise parity between DFPT Berry-phase polarisation and \texttt{MACE-Field-MP-0} predictions for the 
+    (left) training, (middle) validation and (right) test splits. Each panel shows the three Cartesian components 
+    of $\mathbf{P}$ flattened over all path frames and materials; the dashed line indicates $y{=}x$, and colours 
+    (where present) denote point density on a log scale.}
+    \label{fig:mp0_pol_parities}
+\end{figure*}
+
+\begin{figure*}
+    \centering
+    \includegraphics[width=.49\linewidth]{figures/bec_parity_2panel_train-mh.pdf}
+    \includegraphics[width=.49\linewidth]{figures/bec_parity_2panel_valid-mh.pdf}
+    \includegraphics[width=.49\linewidth]{figures/bec_parity_2panel_test-mh.pdf}
+    \caption{\textbf{Born effective charge parities for the fine-tuned \texttt{MACE-Field-MP-0} model on the MP-Dielectric dataset.}
+    Component-wise parity between DFPT Born effective charges $Z^\ast$ (in units of $e$) and \texttt{MACE-Field-MP-0} predictions
+    for the training, validation and test splits (top to bottom or left to right, as indicated in the panel titles).
+    Each parity plot is split into diagonal components ($xx,yy,zz$) and off-diagonal components ($i\neq j$), with the dashed 
+    line showing $y{=}x$ and the colour scale indicating point density on a log scale.}
+    \label{fig:mp0_bec_parities}
+\end{figure*}
+
+\begin{figure*}
+    \centering
+    \includegraphics[width=.49\linewidth]{figures/alpha_parity_2panel_train-mh.pdf}
+    \includegraphics[width=.49\linewidth]{figures/alpha_parity_2panel_valid-mh.pdf}
+    \includegraphics[width=.49\linewidth]{figures/alpha_parity_2panel_test-mh.pdf}
+    \caption{\textbf{Electronic polarisability parities for the fine-tuned \texttt{MACE-Field-MP-0} model on the MP-Dielectric dataset.}
+    Component-wise parity between DFPT electronic polarisability tensors $\boldsymbol{\alpha}$ and \texttt{MACE-Field-MP-0} predictions
+    for the training, validation and test splits. As for the BECs, each panel separates diagonal and off-diagonal components and 
+    uses a log-density colour scale, with the dashed line indicating $y{=}x$.}
+    \label{fig:mp0_alpha_parities}
+\end{figure*}
+
+
+\end{document}

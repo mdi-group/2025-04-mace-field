@@ -1,0 +1,839 @@
+% REVTeX guide: https://www.ctan.org/tex-archive/macros/latex/contrib/revtex
+\documentclass[aps,physrev,graphicx,amsmath,amssymb,
+               reprint,superscriptaddress]{revtex4-2}
+
+% PACKAGES
+\usepackage{graphicx}
+\usepackage{subfigure}
+\usepackage{physics}
+\usepackage{mathtools}
+\usepackage[version=3]{mhchem}
+\usepackage{dcolumn}
+\usepackage{bm}
+\usepackage{xcolor}
+\usepackage{siunitx}
+\usepackage[font=small,labelfont=bf,
+   justification=Justified,
+   singlelinecheck=off,
+   format=plain]{caption}
+\sisetup{math-micro=\text{µ},text-micro=µ}
+\usepackage{parskip}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{mathpazo}
+
+\begin{document}
+\title{General Learning of the Electric Response of Inorganic Materials}
+\date{\today}
+
+\author{Bradley A. A. Martin}
+\email[Electronic mail: ]{bradley.martin@ucl.ac.uk}
+\affiliation{Department of Chemistry, University College London, London, WC1E 6BT, United Kingdom}
+
+\author{Alex M. Ganose}
+\affiliation{Department of Chemistry, Imperial College London, London, W12 0BZ, United Kingdom}
+
+\author{Venkat Kapil}
+\affiliation{Department of Physics and Astronomy, University College London, London, WC1H 0AH, United Kingdom}
+
+\author{Tingwei Li}
+\affiliation{Department of Materials Science, Imperial College London, London, SW7 2AZ, United Kingdom}
+
+\author{Keith T. Butler}
+\email[Electronic mail: ]{k.t.butler@ucl.ac.uk}
+\affiliation{Department of Chemistry, University College London, London, WC1E 6BT, United Kingdom}
+
+\keywords{field-aware equivariant interatomic potentials, electric enthalpy, Berry-phase polarisation, Born effective charges, electronic polarisability, dielectric response, ferroelectrics, finite-field molecular dynamics, Atomic Cluster Expansion (ACE), MACE, equivariant graph neural networks, Materials Project, BaTiO\textsubscript{3}, $\alpha$-quartz}
+
+
+\begin{abstract}
+Dielectric response controls how materials screen charge and interact with electric fields and light, which underlie technologies in microelectronics, power conversion, sensing, photonics and catalysis. First-principles methods can predict key quantities such as polarisation $\mathbf P$, Born effective charges $Z^*$ and polarisability $\boldsymbol\alpha$, but their cost limits systematic exploration across chemistries, temperatures and device-relevant length scales. We introduce \texttt{MACE-Field}, a field-aware, $O(3)$-equivariant interatomic potential that learns a single electric enthalpy functional $\mathcal F(\{\mathbf R\},\mathbf E)$ and obtains $\mathbf P$, $Z^*$ and $\boldsymbol\alpha$ by exact differentiation. A uniform electric field couples linearly to latent spherical-tensor features (``multipoles'') inside each message-passing layer, while the energy readout remains a scalar, which enforces Maxwell reciprocity, the acoustic sum rule and crystal tensor symmetries by construction. Because field coupling is implemented as a plug-in on top of the standard \texttt{MACE} backbone, existing energy/force foundation models can be upgraded to become field-aware. Fine-tuning a \texttt{MACE} foundation on $\sim 6{,}000$ dielectric and $\sim 2{,}500$ ferroelectric DFPT structures yields \texttt{MACE-Field-MP-0}, which predicts $Z^*$, $\boldsymbol\alpha$, dielectric constants, same-branch Berry-phase polarisations along distortion paths and spontaneous polarisations across diverse inorganic crystals, while retaining its original force-field accuracy. \texttt{MACE-Field} models further reproduce \ce{BaTiO3} hysteresis loops and $\alpha$-quartz infrared and Raman spectra and dielectric functions from finite-field molecular dynamics. These results show how a simple, physics-informed field coupling can equip atomistic foundation models with robust dielectric response, enabling routine, differentiable simulation and data-driven discovery of field-responsive materials.
+\end{abstract}
+
+
+
+\maketitle 
+
+\section{Introduction}\label{sec:intro}
+
+Controlling how solids respond to electric fields is a recurring theme across chemistry, condensed-matter physics and electronic engineering. It underpins technologies ranging from gate oxides and interconnect dielectrics in microelectronics, to capacitors for power conversion, and to piezoelectrics and electro-optic crystals in sensing, imaging and telecommunications~\cite{Scott2007,Damjanovic1998,Boyd2003,Robertson2006}. In all of these systems, device operation depends on how a material redistributes charge and polarisation under an applied field. At the microscopic level, this behaviour is encoded in the electric polarisation $\mathbf P$, Born effective charges $Z^*$ and polarisability tensors $\boldsymbol\alpha$. These quantities connect local chemistry and bonding to macroscopic observables such as dielectric permittivity, and piezoelectric and ferroelectric coefficients~\cite{king-smith-vanderbilt-1993,resta-1994,gonze_dynamical_1997,rabe_modern_2007}.
+They also govern optical and nonlinear-optical response, including bulk and ferroelectric photovoltaic effects in non-centrosymmetric crystals and hybrid perovskites~\cite{Young2012,Cook2017,Dai2023,Butler2015Photoferroics,Frost2014MolecularFerroelectric}.
+Dielectric response also shapes how materials interact with fields in catalysis and electrochemistry: oriented and interfacial electric fields can tune activation barriers and selectivity in molecular and enzymatic catalysis, and in electrochemical reactions at electrified interfaces~\cite{Che2018,Huang2019,Leonard2021,Yu2022,Long2025}. Similar screening and polarisation physics even govern transport in geophysical and environmental materials, for example, in the electrical conductivity of porous rocks and the Earth's crust~\cite{Glover2015}. A general, transferable way to predict these responses by learning $\mathbf P$, $Z^*$, and $\boldsymbol\alpha$ reliably and at scale across chemistries and structures would therefore enable data-driven screening, finite-temperature simulations and targeted optimisation of functional materials.
+
+For insulating crystals, however, polarisation is more subtle to define than for finite molecules. Within the \emph{Modern Theory of Polarisation}, it is a geometric (Berry) phase and is therefore multivalued on a lattice of polarisation quanta~\cite{king-smith-vanderbilt-1993,resta-1994}. In practice, only \emph{differences} in polarisation are gauge-invariant and measurable. This immediately complicates both the definition and the learning of polarisation-related properties.
+
+First-principles techniques based on density-functional perturbation theory (DFPT) and finite-field Berry-phase methods provide rigorous access to linear and nonlinear response. These methods yield $Z^*$, electronic polarisabilities, dielectric tensors and electro-optic coefficients~\cite{gonze_dynamical_1997,nunes-gonze-2001,souza-iniguez-vanderbilt-2002}, but at a high computational cost: each DFPT calculation involves solving linear-response equations for all occupied bands and relevant perturbations, and is typically one to two orders of magnitude more expensive than a single total-energy calculation. This limits system size, chemical diversity and accessible time scales. As a result, there is a gap between the level of theory required to describe dielectric observables and the scale needed for screening, finite-temperature dynamics and device-relevant microstructures.
+
+Machine-learning interatomic potentials (MLIPs) offer a route to bridge this gap by reproducing \emph{ab initio} accuracy at much lower cost~\cite{behler-2007-bp,schutt-2018-schnet,batzner-2022-nequip}. Recent $O(3)$-equivariant message-passing graph neural networks, including \texttt{NequiP}, \texttt{MACE} and related models, have delivered state-of-the-art accuracy and transferability for energies, forces and stresses~\cite{batzner-2022-nequip,batatia-2022-mace}. Parallel advances have begun to incorporate electrostatics and field response. Examples include unified electric-enthalpy learning that differentiates a single scalar functional to obtain $\,\mathbf P\,$, $\, Z^*\,$ and $\,\boldsymbol\alpha\,$ for selected materials~\cite{allegro-pol-2025}; latent long-range treatments that recover polarisation and BECs from learned charge fields~\cite{les-2025}; and charge-augmented \texttt{ACE} variants~\cite{cace-2024}. Related property-prediction models directly learn dielectric tensors or scalar dielectric constants from structure~\cite{Morita2020,anisonet-2024}. Molecular and liquid studies have also demonstrated direct ML prediction of dipoles and polarisabilities for bulk water~\cite{Kapil2024FaradayDiscuss}. Together, these developments show that modern representation learning can encode subtle symmetries and long-range couplings that are essential for dielectric phenomena.
+
+From the perspective of scalable computational science, however, two limitations remain. First, most unified electric-response MLIPs are trained as \emph{single-material} models, which restricts transfer across chemistries, space groups and bonding motifs. Second, their architectures often diverge from widely used backbones, which hinders the reuse of foundation models pretrained on large energy/force/stress datasets. High-quality dielectric labels are also much scarcer than structural and energetic data. The ability to inherit and fine-tune existing foundations is therefore particularly valuable for building general-purpose, field-aware models that amortise training effort across large materials spaces.
+
+To address these challenges, we introduce \texttt{MACE-Field}~\cite{mdi_group_mace_field}, a physics-informed extension of \texttt{MACE} that learns a single
+\emph{electric enthalpy} functional $\mathcal F(\{\mathbf R\},\mathbf E)$ across diverse inorganic crystals and obtains all
+dielectric observables by \emph{exact differentiation}:
+\begin{equation}
+\mathbf P=-\Omega^{-1}\frac{\partial \mathcal F}{\partial \mathbf E},\qquad
+Z^*_{\kappa,ij}=\Omega\,\frac{\partial P_i}{\partial u_{\kappa j}},\qquad
+\alpha_{ij}=\frac{\partial P_i}{\partial E_j}.
+\end{equation}
+In analogy to the multipole expansion of electrostatics, a uniform field couples \emph{inside} each message-passing layer to latent equivariant features via Clebsch--Gordan tensor products with equivariant residual mixing. The network readout remains scalar ($L{=}0$), and a branch-invariant loss handles Berry-phase multivaluedness. Because all quantities derive from one scalar, Maxwell reciprocity and the acoustic sum rule follow by construction. This yields a derivative-consistent description of dielectric response that is suitable for finite-field molecular dynamics and spectroscopy and that fits naturally into end-to-end differentiable computational workflows.
+
+\textbf{Our two key advances:}
+\begin{enumerate}
+  \item \textbf{Foundation-model inheritance.} Field coupling is implemented as a plug-in at the latent irrep level that leaves the standard \texttt{MACE} backbone and readout unchanged. Existing \texttt{MACE} foundation weights can therefore be \emph{reused and fine-tuned} to be field-aware. This enables field-response learning in a data-scarce regime by leveraging large, generic energy/force/stress pretraining.
+
+  \item \textbf{Cross-chemistry training.} We train and fine-tune models across broad chemistries from many Materials Project structures, rather than on a single material. In particular, we use MP-Ferroelectric, a polarisation-branch dataset ($\sim$2.5k structures, 61 elements), and MP-Dielectric, a dielectric/BEC dataset ($\sim$6k DFPT entries, 81 elements).
+\end{enumerate}
+
+Together, these advances address the prevailing limitations of per-material training and non-reusable architectures. They provide a derivative-consistent, foundation-compatible framework that scales across chemistry and predicts $\mathbf P$, $Z^*$ and $\boldsymbol\alpha$ for diverse inorganic solids at a cost suitable for large-scale simulations and screening.
+
+We use this framework to fine-tune the \texttt{MACE-MP-0b3} foundation model on MP-Ferroelectric and MP-Dielectric, together with a replay set of 10\,000 structures subsampled from MPtrj. This yields the field-aware foundation model \texttt{MACE-Field-MP-0}. In Sec.~\ref{sec:results}, we benchmark \texttt{MACE-Field-MP-0} on the Matbench dielectric task of predicting refractive index from structure~\cite{Dunn2020}. We also compare it to a \texttt{MACE-Field} model trained \emph{exclusively} on MP-Ferroelectric for spontaneous polarisation and to single-material \ce{BaTiO3} / $\alpha$-\ce{SiO2} models trained on the Allegro-pol MD trajectories~\cite{allegro-pol-2025} for finite-field hysteresis and IR/Raman/dielectric spectra. The remainder of the paper details the relevant background theory (\S\ref{sec:theory}), architecture and design choices (\S\ref{sec:methods}), datasets and training protocols (\S\ref{sec:datasets}), quantitative results (\S\ref{sec:results}), and discussion and outlook (\S\ref{sec:discussion}).
+
+\section{Theory}\label{sec:theory}
+
+\subsection{Modern theory of polarisation (Berry phase)}
+
+In periodic insulators, the macroscopic polarisation is not the naive dipole per unit volume, because the position operator is ill-defined under periodic boundary conditions. The \emph{modern theory of polarisation} resolves this by expressing the electronic contribution as a Berry phase accumulated by the occupied Bloch bands along loops in the Brillouin zone (BZ)~\cite{king-smith-vanderbilt-1993,resta-1994}. We briefly summarise the key ingredients here.
+
+We can decompose the total polarisation into ionic and electronic parts,
+\begin{equation}
+\mathbf P = \mathbf P_\text{ion}+\mathbf P_\text{el},
+\qquad
+\mathbf P_\text{ion} = \frac{-e}{\Omega}\sum_{\kappa} Z_\kappa\,\mathbf R_\kappa,
+\label{eq:P_total}
+\end{equation}
+where $e$ is the electron charge, $\Omega$ the cell volume, $Z_{\kappa}$ the nuclear charge for site $\kappa$, and $\vb{R}_{\kappa}$ the corresponding position vector. The electronic part of the polarisation is
+\begin{equation}
+\mathbf P_\text{el}
+= -\frac{e}{(2\pi)^3}\sum_{n\in\text{occ}}
+\int_{\text{BZ}} \! d\mathbf k\
+\langle u_{n\mathbf k}\,|\, i\nabla_{\mathbf k}\,|\,u_{n\mathbf k}\rangle,
+\label{eq:P_berry}
+\end{equation}
+where $|u_{n\mathbf k}\rangle$ are cell-periodic Bloch functions. Only \emph{changes} of $\mathbf P$ between adiabatically connected states are gauge-invariant; absolute values are defined modulo the \emph{polarisation lattice} generated by the quanta
+\begin{equation}
+\mathbf Q_k=\frac{e\,\mathbf a_k}{\Omega},\qquad k=1,2,3,
+\label{eq:pol_quanta}
+\end{equation}
+with $\{\mathbf a_k\}$ the direct lattice vectors~\cite{king-smith-vanderbilt-1993,resta-1994}. This multivaluedness must be handled explicitly in learning problems (Sec.~\ref{sec:methods}).
+
+\subsection{Finite electric fields and DFPT/finite-field formalisms}
+A uniform static electric field, $\mathbf E$, couples to polarisation through the electric enthalpy (fixed-$\mathbf E$)
+\begin{equation}
+\mathcal F(\{\mathbf R\},\mathbf E) = E_0(\{\mathbf R\}) - \Omega\,\mathbf E\!\cdot\!\mathbf P(\{\mathbf R\}),
+\label{eq:enthalpy}
+\end{equation}
+where $E_0$ is the zero-field energy and $\Omega$ the cell volume~\cite{nunes-gonze-2001,souza-iniguez-vanderbilt-2002}. This functional permits direct optimisation of field-polarised states and yields forces and stresses at fixed~$\mathbf E$.
+
+Within density-functional perturbation theory (DFPT), linear-response equations for first-order wavefunctions under atomic displacements or homogeneous fields provide access to the complete set of dielectric, piezoelectric, and vibrational properties at zero field without performing finite differences~\cite{gonze_dynamical_1997}. In this work, we use DFPT quantities as labels and as a reference for assessing our learned model.
+
+\subsection{Macroscopic response tensors as energy derivatives}
+In SI units, the primary response functions used here are defined by exact derivatives of the electric enthalpy:
+\begin{align}
+\mathbf P(\{\mathbf R\}) &= -\frac{1}{\Omega}\,\frac{\partial \mathcal F}{\partial \mathbf E}, \label{eq:P_from_F}\\
+Z^*_{\kappa,ij}(\{\mathbf R\}) &= \Omega\,\frac{\partial P_i}{\partial u_{\kappa j}}
+= \frac{\partial F_{\kappa j}}{\partial E_i}, \label{eq:Zstar}\\
+\alpha_{ij}(\{\mathbf R\}) &= \frac{\partial P_i}{\partial E_j}. \label{eq:alpha}
+\end{align}
+Here $u_{\kappa j}$ denotes the Cartesian displacement of sublattice $\kappa$, $F_{\kappa j}=-\partial \mathcal F/\partial u_{\kappa j}$ the force component,
+$Z^*$ the Born effective charge tensor (dynamical charge), and $\boldsymbol\alpha$ the electronic polarisability per unit volume~\footnote{With $\mathbf D=\varepsilon_0\mathbf E+\mathbf P$ and $\mathbf P=\varepsilon_0\boldsymbol\chi^{(1)}\mathbf E$, one has $\boldsymbol\alpha=\varepsilon_0\boldsymbol\chi^{(1)}$ and $\boldsymbol\varepsilon_\infty=\varepsilon_0(\mathbf I+\boldsymbol\chi^{(1)})$.}. Maxwell reciprocity implies symmetry of mixed second derivatives (e.g.\ $\alpha_{ij}=\alpha_{ji}$). Translational invariance yields the acoustic sum rule (ASR) $\sum_\kappa Z^*_{\kappa,ij}=0$ for all $i,j$. Higher-order responses (nonlinear optics, electro-optic) follow from higher derivatives of $\mathcal F$, but are not our primary focus here.
+
+\subsection{Ferroelectrics and spontaneous polarisation}
+Ferroelectrics are insulating crystals with a switchable \emph{spontaneous} polarisation $\mathbf P_s\neq\mathbf 0$ at zero field, arising from a structural instability that breaks inversion symmetry. Near the paraelectric-to-ferroelectric transition, a soft polar phonon condenses, producing a double-well free-energy landscape as a function of the order parameter (e.g.\ the unstable mode amplitude). Within a Landau--Devonshire expansion, one writes, schematically,
+$F(\mathbf P)=\tfrac{1}{2}a(T)\mathbf P^2+\tfrac{1}{4}b\,(\mathbf P^2)^2+\cdots-\Omega\,\mathbf E\!\cdot\!\mathbf P$, with $a(T)$ changing sign at the Curie temperature $T_C$.
+
+The coupling $-\Omega\,\mathbf E\!\cdot\!\mathbf P$ tilts the double well, leading to coercive fields and hysteresis loops under cyclic fields.
+Microscopically, the magnitude and direction of $\mathbf P_s$ follow from the Berry phase along an adiabatic distortion path connecting the paraelectric reference to the polar ground state, and its coupling to $\mathbf E$ is controlled by \emph{mode effective charges}, projections of $Z^*$ onto the polar eigenvectors.
+Anomalously large $Z^*$ in perovskites signal strong cross-gap hybridisation and underpins large dielectric and piezoelectric responses.
+
+\subsection{From linear dielectric response to spectra}
+The frequency-dependent dielectric tensor can be decomposed into electronic and ionic parts. At high frequency (well above phonon energies and below interband transitions), the response is purely electronic, $\boldsymbol\varepsilon_\infty=\varepsilon_0(\mathbf I+\boldsymbol\chi^{(1)})$, which we compute from $\boldsymbol\alpha$. At low frequency, the \emph{ionic} contribution from infrared-active phonons adds a resonant term, schematically
+\begin{equation}
+\Delta\varepsilon_{ij}(\omega)\ \propto\
+\sum_{m\in\text{IR}} \frac{\tilde Z_{m,i}\,\tilde Z_{m,j}}{\omega_{m}^2-\omega^2-i\gamma_m\omega},
+\label{eq:ionic_eps}
+\end{equation}
+where $\omega_m$ are transverse-optical phonon frequencies, $\gamma_m$ linewidths, and $\tilde{\mathbf Z}_m$ the mode effective charges obtained by contracting $Z^*$ with phonon eigenvectors. In the static limit, this yields the lattice (ionic) permittivity and, together with $\boldsymbol\varepsilon_\infty$, the total static dielectric constant $\boldsymbol\varepsilon(0)$; the Lyddane--Sachs--Teller relation connects $\varepsilon(0)/\varepsilon_\infty$ to LO--TO splitting. The complex dielectric function is related to the optical conductivity by $\boldsymbol\varepsilon(\omega)=\boldsymbol\varepsilon_\infty + i\,\boldsymbol\sigma(\omega)/(\varepsilon_0\omega)$.
+
+In molecular dynamics, infrared absorption follows from the dipole--dipole (or $\dot{\mathbf P}$--$\dot{\mathbf P}$) autocorrelation, Raman intensities from polarisability--polarisability correlations~\cite{Thomas2013, Luber2014}, and the full frequency-dependent complex dielectric function from both. This links time-domain simulations under our learned $\mathcal F$ to frequency-domain spectra.
+
+\subsection{Multipole expansion and inspiration for equivariant field coupling}
+We introduce the multipole expansion as the inspiration for the field-aware \texttt{MACE} model. The interaction of a localised charge distribution $\rho(\mathbf r)$ with a slowly varying external electrostatic potential $V_\text{ext}(\mathbf r)$ can be expanded in multipoles.
+The electrostatic interaction energy is
+\begin{equation}
+E_\text{int}=\int d^3r\,\rho(\mathbf r)\,V_\text{ext}(\mathbf r).
+\end{equation}
+Expanding $V_\text{ext}$ about a reference point (e.g.\ the centre of the charge distribution)
+\begin{equation}
+V_\text{ext}(\mathbf r)=V_0 + r_i\,\partial_i V_0 + \tfrac12 r_i r_j\,\partial_i\partial_j V_0 + \cdots,
+\end{equation}
+and introducing the Cartesian multipole moments
+\begin{align}
+q &= \int d^3r\,\rho(\mathbf r),\qquad
+p_i = \int d^3r\,r_i\,\rho(\mathbf r), \\
+Q_{ij}^{(\rm T)} &= \int d^3r\,\big(3 r_i r_j - r^2\delta_{ij}\big)\,\rho(\mathbf r),
+\end{align}
+yields the familiar coupling to the electric field $\mathbf E=-\nabla V_\text{ext}$ and its gradients:
+\begin{equation}
+E_\text{int} = q\,V_0 - \mathbf p\!\cdot\!\mathbf E_0
+-\frac{1}{6}\,Q_{ij}^{(\rm T)}\,\partial_i E_{0,j} \; + \; \cdots,
+\label{eq:multipole}
+\end{equation}
+where subscripts $0$ indicate evaluation at the expansion point.
+For a \emph{uniform} field ($\nabla\mathbf E=0$) only the dipole term survives.
+In charge-neutral insulating crystals, the total monopole $q$ vanishes per cell; a non-zero dipole density (i.e.\ macroscopic polarisation) arises when inversion symmetry is broken (ferroelectrics)~\footnote{Different quadrupole conventions exist (traced vs.\ traceless tensors, differing numerical factors).
+Our use of the multipole series is solely as symmetry \emph{guidance} for constructing equivariant couplings; numerical prefactors in \eqref{eq:multipole} do not enter the learned architecture.}.
+
+This multipolar structure has a direct analogue in the Atomic Cluster Expansion (ACE)~\cite{drautz-2019-ace} and its neural realisation \texttt{MACE}~\cite{batatia-2022-mace}. The local neighbour density around atom $\alpha$, $\rho_\alpha(\mathbf r)=\sum_{j} f_\text{cut}(r_{\alpha j})\,\delta(\mathbf r-\mathbf r_{\alpha j})$, admits a projection onto radial functions and spherical harmonics,
+\begin{equation}
+A^{(\alpha)}_{n\ell m}=\sum_{j} R_n(r_{\alpha j})\,Y_{\ell m}(\hat{\mathbf r}_{\alpha j}),
+\end{equation}
+which are \emph{spherical tensors} of rank $\ell$ transforming under the $\mathrm{SO}(3)$ irrep $\ell$. These coefficients play the role of \emph{generalised multipole moments} of the atomic environment. Scalar, rotation-invariant energies are then formed by contracting such tensors via Clebsch--Gordan coefficients (the spherical-tensor analogue of combining multipoles into invariants).
+
+A homogeneous electric field is itself a rank-1 spherical tensor. By the Wigner--Eckart theorem, the symmetry-allowed linear coupling between a latent rank-$L$ feature $T^{(L)}$ and the field $E^{(1)}$ decomposes as
+\begin{equation}
+T^{(L)} \otimes E^{(1)} \;=\; \bigoplus_{J=|L-1|}^{L+1} \big[T^{(L)} \otimes E^{(1)}\big]^{(J)} ,
+\label{eq:CG-sum}
+\end{equation}
+with components
+\begin{equation}
+\big[T^{(L)} \otimes E^{(1)}\big]^{(J)}_{M}
+  \;=\;
+  \sum_{m,m'}
+  C^{J M}_{L m,\,1 m'}\;
+  T^{(L)}_{m}\, E^{(1)}_{m'} ,
+\label{eq:CG-components}
+\end{equation}
+where $C$ are Clebsch--Gordan coefficients. This is exactly the pattern we implement in the architecture through equivariant tensor products followed by irrep-wise mixing [see Fig.~\ref{fig:architecture} and Eq.~(\ref{eq:meth_latent})]. The key idea is that the field perturbs latent ``multipoles'' according to angular-momentum selection rules, while the final energy remains a scalar invariant. Keeping the coupling \emph{linear} in $\mathbf E$ realises latent linear response; nonlinear field effects are nevertheless captured by stacking interaction layers and nonlinear readouts, which together generate higher-order dependence on $\mathbf E$ in the learned electric enthalpy $\mathcal F(\{\mathbf R\},\mathbf E)$.
+
+\subsection{Physical identities enforced by a single scalar enthalpy}\label{sec:identities}
+All response tensors in this work are \emph{exact derivatives} of the same twice-differentiable scalar electric-enthalpy functional $\mathcal F(\{\mathbf R\},\mathbf E)$ [Eqs.~(\ref{eq:P_from_F})--(\ref{eq:alpha})].
+This immediately enforces key symmetries and sum rules, without any extra penalties, because they are nothing more than properties of mixed partial derivatives and fundamental invariances of $\mathcal F$.
+\\
+
+\paragraph*{Maxwell/reciprocity (symmetry of mixed derivatives).}
+From $\mathbf P = -\Omega^{-1}\partial \mathcal F/\partial \mathbf E$ one has
+\begin{equation}
+\alpha_{ij}
+= \frac{\partial P_i}{\partial E_j}
+= -\frac{1}{\Omega}\,\frac{\partial^2 \mathcal F}{\partial E_i\,\partial E_j}
+= -\frac{1}{\Omega}\,\frac{\partial^2 \mathcal F}{\partial E_j\,\partial E_i}
+= \alpha_{ji},
+\label{eq:maxwell-alpha}
+\end{equation}
+i.e.\ the electronic polarisability is \emph{exactly symmetric} at the level of the model.
+Likewise, with $F_{\kappa j}=-\partial \mathcal F/\partial u_{\kappa j}$,
+\begin{equation}
+Z^*_{\kappa,ij}
+=\frac{\partial F_{\kappa j}}{\partial E_i}
+= -\,\frac{\partial^2 \mathcal F}{\partial E_i\,\partial u_{\kappa j}}
+= -\,\frac{\partial^2 \mathcal F}{\partial u_{\kappa j}\,\partial E_i}
+=\Omega\,\frac{\partial P_i}{\partial u_{\kappa j}},
+\label{eq:maxwell-zstar}
+\end{equation}
+which is the standard Maxwell identity linking $Z^*$ to the field-derivative of the force and to the position-derivative of the polarisation.
+\\ 
+
+\paragraph*{Acoustic sum rule (ASR) for Born effective charges.}
+$\mathcal F$ is invariant under a rigid translation of all sublattices,
+$\{\mathbf R_\kappa\}\!\to\!\{\mathbf R_\kappa+\boldsymbol\delta\}$, for any $\boldsymbol\delta$ and any uniform $\mathbf E$,
+hence
+\begin{equation}
+0 = \frac{\partial}{\partial \delta_j}\,\mathcal F(\{\mathbf R_\kappa+\boldsymbol\delta\},\mathbf E)
+= \sum_\kappa \frac{\partial \mathcal F}{\partial u_{\kappa j}}
+= -\sum_\kappa F_{\kappa j}.
+\label{eq:rigid-shift}
+\end{equation}
+Differentiating \eqref{eq:rigid-shift} with respect to $E_i$ and using \eqref{eq:maxwell-zstar},
+\begin{equation}
+0 = \sum_\kappa \frac{\partial^2 \mathcal F}{\partial E_i\,\partial u_{\kappa j}}
+= - \sum_\kappa Z^*_{\kappa,ij},
+\quad \Rightarrow \quad
+\sum_\kappa Z^*_{\kappa,ij}=0 \quad \forall\,i,j,
+\label{eq:asr-derivation}
+\end{equation}
+i.e.\ the ASR holds \emph{by construction} for a uniform field and a translation-invariant $\mathcal F$.
+\\
+
+\paragraph*{Rotational covariance and crystal point-group constraints.}
+Let $\mathcal R\!\in\!O(3)$ be a rigid rotation. Our construction ensures
+\begin{equation}
+\mathcal F(\{\mathcal R\mathbf R_\kappa\},\,\mathcal R\mathbf E) \;=\; \mathcal F(\{\mathbf R_\kappa\},\,\mathbf E),
+\label{eq:rot-inv}
+\end{equation}
+i.e.\ the scalar output is rotationally invariant when the atomic configuration and the uniform field are co-rotated.
+Taking derivatives at $\mathbf E\!=\!\mathbf 0$ yields the correct tensorial transformation laws:
+\begin{align}
+\mathbf P(\{\mathcal R\mathbf R\}) &= \mathcal R\,\mathbf P(\{\mathbf R\}),\\
+\boldsymbol\alpha(\{\mathcal R\mathbf R\})
+&= \mathcal R\,\boldsymbol\alpha(\{\mathbf R\})\,\mathcal R^\top, \label{eq:alpha-cov}\\
+Z^*_{\pi(\kappa)}(\{\mathcal R\mathbf R\})
+&= \mathcal R\,Z^*_{\kappa}(\{\mathbf R\})\,\mathcal R^\top,
+\label{eq:zstar-cov}
+\end{align}
+where $\pi$ permutes sublattices according to the rotation.
+\\
+
+\paragraph*{Thermodynamic sign/definiteness.}
+At fixed atomic positions, the second field-derivative of $\mathcal F$ gives
+$-\Omega\,\boldsymbol\alpha = \partial^2 \mathcal F/\partial \mathbf E\,\partial \mathbf E$.
+For stable insulating states at zero field, thermodynamics implies
+$\mathbf v^\top \boldsymbol\alpha\,\mathbf v \ge 0$ for any vector $\mathbf v$ (passive linear response).
+While symmetry \eqref{eq:maxwell-alpha} is exact in our construction, strict positive semi-definiteness is a property of the true material response and is \emph{approached} as the learned $\mathcal F$ converges; tiny negative eigenvalues may occur at inference.
+
+\section{Methods}\label{sec:methods}
+
+\begin{figure*}
+    \centering
+    \includegraphics[width=1\linewidth]{figures/architecture.png}
+    \caption{\textbf{MACE-Field architecture.} At message-passing layer $t$, \texttt{MACE} produces equivariant latent features $h^{(t)}_{\alpha,kLM}$ (generalised “multipoles” of order $L$). A uniform external field $\mathbf E$ (irrep $l{=}1$) couples to these features via a fully-connected tensor product (Clebsch--Gordan contraction) to form $\Delta h^{(t)}_{\alpha,kLM}$; an irrep-wise linear map $W^{(t)}$ and a residual update yield field-aware features $\tilde h^{(t)}_{\alpha,kLM}$. Scalar components ($L{=}0$) are read out at each layer and summed to give a rotationally invariant electric enthalpy $\mathcal F$. All dielectric observables are obtained as exact derivatives of this single scalar: polarisation $\mathbf P=-\Omega^{-1}\partial \mathcal F/\partial \mathbf E$, Born effective charges $Z^{*}_{\alpha,ij}=\Omega\,\partial P_i/\partial R_{\alpha j}/e=\partial F_{\alpha j}/\partial E_i$, and electronic polarisability $\alpha_{ij}=\partial P_i/\partial E_j$. Hidden layers remain $O(3)$-equivariant; only the final readout in layer $t=T$ is strictly invariant.
+    }
+    \label{fig:architecture}
+\end{figure*}
+
+\subsection{Overview}
+We learn a single scalar electric-enthalpy functional $\mathcal F(\{\mathbf R\},\mathbf E)$ that is differentiable with respect to both atomic positions and a \emph{global, uniform} electric field. The \texttt{MACE-Field} network is a field-aware variant of \texttt{MACE}: it injects the field into latent $O(3)$-equivariant features at each interaction layer while keeping the final readout scalar ($L{=}0$). Polarisation, BECs, and polarisability are then obtained by \emph{exact} automatic differentiation of $\mathcal F$
+[Eqs.~(\ref{eq:P_from_F})--(\ref{eq:alpha})], ensuring derivative consistency (Maxwell symmetries and acoustic sum rules) by construction. Conceptually, this makes \texttt{MACE-Field} a physics-informed, end-to-end differentiable model: all response properties are mixed derivatives of a single learned potential, avoiding finite-difference noise and fitting naturally into automatic adjoint-based optimisation and downstream simulation workflows.
+
+\subsection{Architecture and field coupling}
+
+A schematic of the \texttt{MACE-Field} architecture is shown in Fig.~\ref{fig:architecture}. We start from a standard \texttt{MACE} backbone with $T$ layers, $K$ hidden irreps, and message interaction and product blocks as in Ref.~\onlinecite{batatia-2022-mace}. 
+
+Let $h^{(t)}_{\alpha,kLM}$ denote the latent features at layer $t$ (atom $\alpha$, channel $k$, irrep $L$, component $M$). A global uniform electric field is represented as an $l{=}1$ vector (odd parity $p=-1$) irrep feature $E_{1m}$ and coupled at each layer $t<T$ via a \texttt{FullyConnectedTensorProduct} followed by a linear equivariant mixing (residual update)
+\begin{align}
+\Delta h^{(t)}_{\alpha,kLM}
+&= \sum_{l_1 m_1 m_2}
+\mathcal C^{LM}_{l_1 m_1,\,1 m_2}\,
+h^{(t)}_{\alpha,k l_1 m_1}\,E_{1 m_2},\nonumber\\
+\tilde h^{(t)}_{\alpha,kLM}
+&= h^{(t)}_{\alpha,kLM} - \sum_{\tilde k} W^{(t)}_{k\tilde k L}\,\Delta h^{(t)}_{\alpha,\tilde k LM},
+\label{eq:meth_latent}
+\end{align}
+with Clebsch--Gordan coefficients $\mathcal C$ and learned weights $W^{(t)}$.
+Message passing and products operate on $\tilde h^{(t)}$ thereafter.
+At the final layer $t{=}T$, following \texttt{MACE}, we retain only $L{=}0$ scalars and employ a nonlinear readout to produce per-atom contributions, which are summed over atoms and layers to yield $\mathcal F$.
+The field is identical for all atoms in a graph and does \emph{not} depend on absolute positions, preserving translation invariance. At zero field $E=0$, the residual update is identically zero, so we fall back to the normal \texttt{MACE} behaviour. Because the field coupling layers operate purely on latent features, the underlying ACE descriptors and scalar readout are unchanged, making \texttt{MACE-Field} a true plug-in: any existing \texttt{MACE} checkpoint can be upgraded to a field-aware model by inserting these layers and fine-tuning on response data.
+
+\subsection{Differentiable observables and units}
+
+\subsubsection{Target properties}
+
+We compute observables by automatic differentiation (as implemented in \texttt{PyTorch}'s \texttt{autograd} functionality) on the \emph{interaction} part of the energy (the atomic baselines are constant):
+\begin{align}
+\mathbf P &= - \frac{1}{\Omega} \frac{\partial \mathcal F}{\partial \mathbf E}, \qquad
+Z^*_{\kappa,ij} = \frac{\partial(\Omega P_i)}{\partial u_{\kappa j}},\qquad
+\alpha_{ij} = \frac{\partial P_i}{\partial E_j}.
+\label{eq:meth_derivs}
+\end{align}
+Internally, $\mathbf P$ is stored in $e/\text{\AA}^2$, $Z^*_{\kappa,ij}$ in units of $e$, and $\alpha_{ij}$ in $e/(\text{\AA}\,\text{V})$ (i.e.\ $Z^*$ is dimensionless ``in units of $e$'').
+We report polarisations in $\mu$C\,cm$^{-2}$ and polarisabilities in units of $\varepsilon_0$ (vacuum permittivity) where convenient.
+
+All training losses use consistent internal units. To obtain $Z^*$ and $\boldsymbol\alpha$, we differentiate $\Omega\,\mathbf P$ with respect to atomic positions and $\mathbf P$ with respect to $\mathbf E$, respectively, using nested automatic differentiation. During training, we retain and create graphs for higher-order derivatives only when those targets are present in the batch. We compute losses on the \emph{interaction} energy (the atomic baselines are constant), so that derivatives reflect the learned $\mathcal F$.
+
+\subsubsection{Derived properties: Dielectric constants}
+\label{sec:dielectric_math}
+
+We can relate the polarisability to the \emph{relative} high-frequency dielectric tensor by
+\begin{equation}
+\boldsymbol\varepsilon_\infty^{(r)} = \mathbf I + \frac{\boldsymbol\alpha}{\varepsilon_0}.
+\label{eq:eps_from_alpha}
+\end{equation}
+Likewise, we obtain the polycrystalline dielectric constant $\varepsilon^{(\text{poly})}_\infty$ at long wavelengths (ionic contributions vanish at high frequencies) from the eigenvalues ($\lambda_i$, $i\in\{1,2,3\}$) of the high-frequency dielectric tensor~\cite{Petousis2017},
+\begin{equation}
+\varepsilon^{(\text{poly})}_\infty \equiv \frac{\lambda_1 + \lambda_2 + \lambda_3}{3}.
+\label{eq:eps_poly}
+\end{equation}
+We can then obtain an estimate of the refractive index, $n$, at optical frequencies and far from resonance effects using
+\begin{equation}
+    n = \sqrt{\varepsilon^{(\text{poly})}_\infty}.
+\label{eq:refractive_index}
+\end{equation}
+
+For a given relaxed structure, the real-space Hessian is
+\begin{equation}
+  H_{\kappa\alpha,\kappa'\beta} = \frac{\partial^2 \mathcal{F}}{\partial u_{\kappa\alpha}\,\partial u_{\kappa'\beta}} ,
+\end{equation}
+where $\kappa,\kappa'$ index atoms in the unit cell, and $\alpha,\beta\in\{x,y,z\}$ are Cartesian components of the displacements $u_{\kappa\alpha}$. From this we construct the $\Gamma$-point dynamical matrix
+\begin{equation}
+  D_{\kappa\alpha,\kappa'\beta} = \frac{1}{\sqrt{M_\kappa M_{\kappa'}}} H_{\kappa\alpha,\kappa'\beta},
+\end{equation}
+with $M_\kappa$ the mass of atom $\kappa$. Diagonalising $D$ yields phonon eigenfrequencies and eigenvectors,
+\begin{equation}
+  \sum_{\kappa'\beta} D_{\kappa\alpha,\kappa'\beta} e^{(m)}_{\kappa'\beta} = \omega_m^2 e^{(m)}_{\kappa\alpha} ,
+\end{equation}
+where $m$ labels the (zone-centre) normal modes, the $\omega_m$ are the phonon frequencies, and the eigenvectors $e^{(m)}_{\kappa\alpha}$ are chosen orthonormal in the mass-weighted sense,
+\begin{equation}
+  \sum_{\kappa\alpha} e^{(m)}_{\kappa\alpha}\,e^{(m')}_{\kappa\alpha} = \delta_{mm'} .
+\end{equation}
+Given the Born effective charge tensors $Z^{\ast}_{\kappa,i\alpha}$ predicted by \texttt{MACE-Field-MP-0} (with Cartesian indices $i,\alpha\in\{x,y,z\}$), we form the mode effective charges by projecting $Z^*$ onto the phonon eigenvectors,
+\begin{equation}
+  \tilde{Z}_{m,i} = \sum_{\kappa\alpha} \frac{Z^{\ast}_{\kappa,i\alpha}}{\sqrt{M_\kappa}} e^{(m)}_{\kappa\alpha} .
+\end{equation}
+In density-functional perturbation theory, the lattice (ionic) contribution to the dielectric tensor in the static limit $\omega\to 0$ (cf.\ Eq.~\eqref{eq:ionic_eps}) is then given by
+\begin{equation}
+  \varepsilon^{\mathrm{ion}}_{ij} = \frac{4\pi}{\Omega} \sum_{m\,\in\,\mathrm{IR}} \frac{\tilde{Z}_{m,i}\,\tilde{Z}_{m,j}}{\omega_m^2} ,
+  \label{eq:eps_ion_static}
+\end{equation}
+where $\Omega$ is the unit-cell volume and the sum runs over the IR-active, non-acoustic modes at $\Gamma$. In practice, we discard the three translational acoustic modes (for which $\omega_m\to 0$ and $\tilde{Z}_{m,i}\to 0$) and any modes with numerically ill-defined $\omega_m$ arising from slight residual stresses.
+
+Finally, combining the electronic and ionic contributions yields the full static dielectric tensor
+\begin{equation}
+  \boldsymbol{\varepsilon}_0 = \boldsymbol{\varepsilon}_\infty + \boldsymbol{\varepsilon}_{\mathrm{ion}} .
+\end{equation}
+
+\subsection{Branch-invariant polarisation supervision}
+\label{sec:pol-loss}
+
+Polarisation is multivalued modulo the polarisation lattice
+$\mathbf Q_k=e\,\mathbf a_k/\Omega$ [Eq.~(\ref{eq:pol_quanta})].
+As such, we follow the approach taken by \texttt{Allegro-pol}~\cite{allegro-pol-2025}: given a reference $\mathbf P_\mathrm{ref}$ and prediction $\mathbf P_\mathrm{pred}$, we compare the \emph{folded} difference $\Delta\mathbf P_\mathrm{fold}$:
+\begin{align}
+\Delta\mathbf P &= \mathbf P_\mathrm{pred}-\mathbf P_\mathrm{ref},\nonumber\\
+\mathbf x &= Q^{-1}\Delta\mathbf P,\quad Q = [\mathbf Q_1\,\mathbf Q_2\,\mathbf Q_3],\nonumber\\
+\Delta\mathbf P_\mathrm{fold} &= Q\big(\mathbf x-\mathrm{round}(\mathbf x)\big).
+\label{eq:meth_fold}
+\end{align}
+This makes the polarisation loss branch-invariant while leaving $\mathbf P$ itself defined by the conservative derivative in Eq.~(\ref{eq:meth_derivs}).
+
+\subsection{Loss function}
+
+Following the \texttt{UniversalLoss} used by \texttt{MACE} for energy, forces and stress, our field-related per-task losses are
+\begin{align}
+\mathcal L_P &= \frac{1}{W_P}\sum_{g=1}^{N_b} w^P_g\;
+\overline{\mathcal H}_{\delta_P}\!\left(
+\Delta\mathbf P^{\mathrm{fold}}_g\right), \label{eq:L_P}\\[3pt]
+\mathcal L_Z &= \frac{1}{W_Z}\sum_{g=1}^{N_b}\;\frac{1}{n_g}\sum_{a\in g} w^Z_{ga}\;
+\overline{\mathcal H}_{\delta_Z}\!\left(
+{\hat Z}^{\,*}_{ga}- Z^{\,*}_{ga}\right), \label{eq:L_Z}\\[3pt]
+\mathcal L_\alpha &= \frac{1}{W_\alpha}\sum_{g=1}^{N_b} w^\alpha_g\;
+\overline{\mathcal H}_{\delta_\alpha}\!\left(
+{\hat{\boldsymbol\alpha}}_{g}-{\boldsymbol\alpha}_{g}\right),
+\label{eq:L_alpha}
+\end{align}
+where $\mathcal H _{\delta}$ is the Huber loss (with Huber-delta $\delta$), $\overline{\mathcal H}$ denotes the average of $\mathcal H$ over vector/tensor components, $Z^*_{ga}\in\mathbb R^{3\times 3}$ is the BEC tensor on atom $a$,
+and $\boldsymbol\alpha_g$ is the polarisability tensor. A batch $g$ has size $N_b$ and contains $n_g$ atoms. 
+
+Normalisation constants $W_T=\sum_g w^T_g$ (or $\sum_{g,a}w^T_{ga}$ for per-atom terms) prevent batch-size/weight drift. The $w_g$ configuration weights can be used to mask per-task losses for heterogeneous labels by setting the contribution of a particular property to zero if its label is absent for a given data point. This is particularly useful for fine-tuning existing foundation models with a replay set for the energies, forces and stresses, where field-related labels are absent.
+
+The total loss is a non-negative weighted sum of per-task losses:
+\begin{align}
+\mathcal L_{\mathrm{tot}} &=
+\lambda_E \mathcal L_E + \lambda_F \mathcal L_F + \lambda_\sigma \mathcal L_\sigma \nonumber \\
+&\quad+ \lambda_P \mathcal L_P + \lambda_Z \mathcal L_Z + \lambda_\alpha \mathcal L_\alpha , 
+\label{eq:L_total}
+\end{align}
+where the energy, forces and stress losses are the same as in \texttt{MACE}~\cite{batatia-2022-mace}. Unless otherwise stated, we use fixed weights $\lambda$ during training (details for different experiments are provided in the Supplementary Information). We set $\lambda_Z=0$ and $\lambda_\alpha = 0$ for the polarisation experiment, and $\lambda_F=0$ (due to known issues with forces in this particular training set) and $\lambda_P = 0$ for the MP-Dielectric experiment (Sec.~\ref{sec:datasets}). We set $\lambda_\sigma=0$ unless stresses are available.
+
+\subsection{Implementation and training protocol}
+Models are implemented in \texttt{PyTorch} with \texttt{cuEquivariance} irreps (\texttt{e3nn} option is available) and tensor products, and built atop a public \texttt{MACE} codebase.
+
+All training/evaluation scripts, random seeds, data splits, and post-processing (folding) are available from Ref.~\onlinecite{macefield_repo_2025}; Materials Project BEC labels are non-public. Computational details (GPUs, training times) and hyperparameters ($T$, $L_\mathrm{max}$, channels, cutoff, batch size, learning rate) are listed in the Supplementary Information for each experiment.
+
+We train with Adam (decoupled weight decay), cosine learning-rate schedule with warmup, mixed precision, and gradient clipping. We retain and create graphs for autograd of $\Omega\mathbf P$ with respect to $\mathbf R$ and $\mathbf E$ when BECs and $\boldsymbol\alpha$ are requested (higher-order gradients). We use early stopping on validation $\mathbf P$ (ferroelectric split) and $\boldsymbol\alpha$/$Z^*$ (dielectric split). All models are trained with Distributed Data Parallel (DDP) across GPUs; batch sizes are chosen to saturate memory under Automatic Mixed Precision (AMP).
+
+\subsection{Finite-field MD protocols}
+\label{sec:md-protocols}
+
+We perform ML molecular dynamics in \texttt{ASE}~\cite{larsen2017ase} using the learned $\mathcal F$:
+\\
+
+\paragraph*{\ce{BaTiO3} hysteresis.}
+We equilibrate at the target temperature (Nosé--Hoover chain; $\Delta t\!=\!0.5$--1.0~\si{fs}),
+then apply a cyclic uniform field $\mathbf E(t)=E_0\sin(\omega t)\,\hat{\mathbf e}$ along the polar axis.
+We record $\mathbf P(t)$, construct $P$--$E$ loops, and extract coercive fields and remanent polarisations.
+0~\si{K} loops are computed by quasi-static field sweeps with ionic relaxation at each field.
+\\
+
+\paragraph*{$\alpha$-\ce{SiO2} IR/Raman and dielectric function.}
+At 300~\si{K} we run long NVT trajectories (order 100--200~\si{ps}) and compute
+IR absorption from the velocity-autocorrelation of $\mathbf P$ and Raman from the autocorrelation of $\boldsymbol\alpha$,
+Fourier-transformed with a Hann window and modest Gaussian broadening.
+The complex dielectric $\boldsymbol\varepsilon(\omega)$ follows from
+$\boldsymbol\varepsilon_\infty^{(r)}$ and the current-current (or $\dot{\mathbf P}$--$\dot{\mathbf P}$) response.
+
+These setups mirror how practitioners would actually use the model in downstream workflows: as a drop-in interatomic potential that can be interrogated under time-dependent fields to compute hysteresis, spectra and dielectric functions. Demonstrating that these workflows remain stable and accurate is therefore a key requirement for practical adoption beyond proof-of-concept parity plots.
+
+\subsection{Comparison to other models}
+\label{sec:compare}
+
+\subsubsection*{Allegro-pol (unified electric enthalpy).}
+Our work is closely related in spirit to Allegro-pol, which also learns a single \emph{electric enthalpy} and obtains $\mathbf P$, $Z^*$, and $\boldsymbol\alpha$ by exact differentiation, thereby enforcing reciprocity and the acoustic sum rule by construction~\cite{allegro-pol-2025}. Both approaches handle the multivalued nature of Berry-phase polarisation during training via a branch-invariant (minimum-image) loss on $\Delta\mathbf P$. The main differences are architectural and data-scientific:
+
+\emph{(i) How the field enters.} \texttt{Allegro-pol} embeds the uniform electric field as a rank-1 vector feature alongside geometric vectors (spherical-harmonics embedding) at the model input and treats it on equal footing with atomic positions \emph{before} entering \texttt{ACE} within Allegro’s local equivariant layers~\cite{allegro-pol-2025}. In contrast, \texttt{MACE-Field} injects $\mathbf E$ within each message-passing layer \emph{after} the latent features are constructed by \texttt{ACE} using Clebsch--Gordan tensor products and an equivariant residual mixing, but before the energy readout for that layer. This preserves the original latent node features by treating the field coupling like a field--multipole perturbation and lets us reuse \texttt{MACE} foundation weights while adding field awareness.
+
+\emph{(ii) Labels and scope.} \texttt{Allegro-pol} constructs labels for $P$, $Z^*$ and $\boldsymbol\alpha$ at (nominal) zero field using small finite-field DFT and finite differences (finite-field properties are then derived from linear-response theory) and demonstrates single-material models (e.g.\ $\alpha$-quartz and \ce{BaTiO3}) that reproduce IR/Raman spectra and ferroelectric hysteresis~\cite{allegro-pol-2025}. Here we construct labels that can generally be either zero- or finite-field depending on the training data; we do not assume linear response in our construction (although we do not investigate nonlinear response in the scope of this work). We then train models across chemistry: one on DFPT BECs and electronic polarisabilities for $\sim$6k MP dielectrics spanning 81 elements, and another on Berry-phase polarisations along 2.5k ferroelectric paths spanning 61 elements (\S\ref{sec:datasets}). This enables zero-shot transfer of $P$, $Z^*$ and $\boldsymbol\alpha$ across different compositions and space groups.
+\\
+
+\subsubsection*{Latent long-range and charge-augmented models.}
+Several recent frameworks target dielectric response by augmenting local MLIPs with explicit or latent electrostatics. Latent Ewald Summation (LES) learns a hidden charge field from local descriptors and applies Ewald summation, enabling long-range response (including polarisation trends) without explicit charge labels~\cite{les-2025}. Within ACE, charge-constrained (ACE+Q) formulations promote charges to variational degrees of freedom to include Coulomb tails~\cite{cace-2024}. These approaches are powerful when response labels are scarce and are complementary to our strategy: \texttt{MACE-Field} directly supervises $P$, $Z^*$ and $\boldsymbol\alpha$ and guarantees derivative consistency by differentiating a single enthalpy, whereas latent/charge models infer response indirectly through the learned electrostatics.
+\\
+
+\begin{figure*}[t]
+    \centering
+    \subfigure[]{
+      \includegraphics[width=0.48\linewidth]{figures/ferroelectric_elements.png}
+      \label{fig:dataset_elements_ferro}
+    }
+    \subfigure[]{
+      \includegraphics[width=0.48\linewidth]{figures/dielectric_elements.png}
+      \label{fig:dataset_elements_dielectric}
+    }
+    \caption{Elemental coverage of the cross-chemistry datasets used in this work. (a) Smidt \emph{et al.} ferroelectric distortion-path set~\cite{smidt-2020-ferrodb} covering 61 elements. (b) MP-Dielectric dataset (DFPT BECs and electronic polarisabilities) covering 81 elements. Colour encodes the per-dataset normalised frequency, that is, the fraction of structures containing each element (see colour bars); grey indicates no examples.}
+    \label{fig:dataset_elements}
+\end{figure*}
+
+
+\subsubsection*{Direct tensor predictors (no force field).}
+Equivariant property predictors such as AnisoNet~\cite{anisonet-2024} and MACE-$\mu$~\cite{Kapil2024FaradayDiscuss} and related models learn direct properties such as the \emph{dielectric tensor from structure} (sometimes decomposed into electronic/ionic parts), or atomic dipoles and polarisabilities, without producing an interatomic potential. These are useful for screening but do not provide forces or a thermodynamically consistent electric-enthalpy functional for MD and finite-field workflows.
+
+\section{Datasets}\label{sec:datasets}
+
+Our training data combine two cross-chemistry datasets, which provide wide elemental coverage across the periodic table, with two single-material molecular-dynamics (MD) trajectory sets. Figure~\ref{fig:dataset_elements} summarises the elemental coverage of the two cross-chemistry datasets that underpin the field-aware foundation model.
+
+\subsection{MP-Dielectric: BECs and polarisabilities of Materials Project dielectrics}
+\label{sec:mp_dielectric}
+
+For dielectric response, we assemble a broad chemistry of $\sim$6{,}000 insulating materials from the Materials Project with DFPT-computed Born effective charges and electronic polarisabilities (equivalently, the electronic dielectric tensor $\,\boldsymbol\varepsilon_\infty$). The elemental coverage and per-element frequencies are shown in Fig.~\ref{fig:dataset_elements_dielectric}; this dataset spans 81 elements and includes oxides, halides, chalcogenides and mixed-anion chemistries.
+
+These data were provided to us by the MP team as a bulk export. All DFPT calculations in this dataset were carried out within the \textbf{GGA-PBE} functional family.~\footnote{Public MP documentation describes DFPT workflows for dielectric properties (using VASP) within the semilocal GGA family; our export consisted of GGA-PBE calculations restricted to insulating entries.} As such, absolute values may differ from higher-level functionals and, as we discuss later, a small subset of entries even violate basic constraints such as the acoustic sum rule. We use $\,\boldsymbol\alpha=\partial \mathbf P/\partial \mathbf E\,$ directly as labels and supervise $\,Z^*\,$ component-wise. Because DFPT forces in this export are not of uniform quality, due in part to different post-processing and stress-correction steps across workflows, we \emph{do not} train on forces or stress for this set to avoid encoding artefacts. Splits are defined at the material level (unique MP identifiers), so polymorphs of a given material may appear in different splits. Together with MP-Ferroelectric (Sec.~\ref{sec:mp_ferroelectric} and Fig.~\ref{fig:dataset_elements_ferro}), this dataset covers more than 80 elements and thousands of distinct chemistries, providing a realistic test of whether a single enthalpy model can generalise dielectric response beyond single-material manifolds.
+
+\subsection{MP-Ferroelectric: Polarisations and distortion paths of Materials Project ferroelectrics}
+\label{sec:mp_ferroelectric}
+
+To go beyond training on single-material examples, we use \texttt{MACE-Field} to predict the polarisation of a wide set of ferroelectric materials and their corresponding polarisation branches, so that we can calculate their spontaneous polarisation. We use the automatically curated first-principles MP-Ferroelectric database of Smidt \emph{et al.}~\cite{smidt-2020-ferrodb}, obtained using the \texttt{MPContribs} API~\cite{Horton2025NatMaterMP, jain-2013-mp, Huck2015eScience, Huck2016CCPE_MPContribs, AndreoniYip2020HMM}. The elemental coverage of this dataset, shown in Fig.~\ref{fig:dataset_elements_ferro}, spans 61 elements and is enriched in oxide and perovskite-like chemistries that are typical ferroelectric candidates.
+
+The MP-Ferroelectric workflow identifies symmetry-related non-polar to polar pairs in the Materials Project and computes Berry-phase polarisations along an adiabatic distortion path connecting the two end states. In this workflow, the electronic polarisation is evaluated with the Berry-phase formalism (VASP implementation) and the ionic part is added from point charges; spin-polarised GGA-PBE(+U) calculations and path-based validation (smoothness and insulating branch) are used to recover a unique spontaneous $\,\mathbf P_s\,$ for each candidate.~\footnote{See Ref.~\onlinecite{smidt-2020-ferrodb}, Secs.\ ``Identifying ferroelectricity from first principles'' and ``Post-processing spontaneous polarisation values''; 255 structure pairs satisfy the ``COMPLETED'' workflow criteria there.}
+
+From this database, we select $\sim$250 materials for which the non-polar and polar endpoints are available and insulating along the path, and include the eight evenly spaced interpolates (fixed cell, linear in fractional coordinates) between endpoints, yielding $\sim$2{,}500 structures in this ferroelectric dataset. For each structure in the training split, we train on the DFT total energy, forces and the Berry-phase polarisation. The Berry-phase polarisations are \emph{pre-folded} onto the polar lattice branch as in Ref.~\onlinecite{smidt-2020-ferrodb}. These folded values supervise the polarisation term in our loss (Sec.~\ref{sec:methods}), while the model itself always predicts $\,\mathbf P\,$ as a derivative of the learned enthalpy. To avoid leakage, all ten path frames (inclusive of the endpoints) for a given material are treated as a single unit and assigned to the same split.
+
+\subsection{Finite-temperature MD trajectory sets: \ce{BaTiO3} and $\alpha$-\ce{SiO2}}
+
+To validate that \texttt{MACE-Field} works as intended, and to benchmark against the unified electric-enthalpy study \texttt{Allegro-pol}, we also train two \texttt{MACE-Field} models \emph{exclusively} on finite-temperature MD trajectory datasets for tetragonal \ce{BaTiO3} (300~\si{K}) and $\alpha$-quartz (\ce{SiO2}, 300~\si{K})~\cite{allegro-pol-2025}. These single-material datasets are not included in Fig.~\ref{fig:dataset_elements}, since they involve only Ba/Ti/O and Si/O, but they provide high-quality, multi-property labels for detailed finite-field validation.
+
+Each dataset consists of time-ordered frames with per-configuration labels: total energy, forces, virial stress, Berry-phase polarisation, Born effective charges and electronic polarisability. We adopt temporally contiguous splits (train and validation, with no separate test set, following Ref.~\onlinecite{allegro-pol-2025}) to prevent leakage across time and preserve autocorrelation structure. 
+
+These datasets serve a dual role: (i) as a demonstration of supervised training for multi-property learning on single-material manifolds, and (ii) as the basis for our finite-field MLMD validations (Sec.~\ref{sec:results}). Specifically, for \ce{BaTiO3} we reproduce polarisation hysteresis at 0~\si{K} (quasi-static field sweeps with ionic relaxation), extracting coercive fields and remanent $\,\mathbf P$; for $\alpha$-\ce{SiO2} we run long 300~\si{K} trajectories ($\sim$200~\si{ps}) and compute infrared absorption from the $\dot{\mathbf P}$--$\dot{\mathbf P}$ autocorrelation and Raman intensities from the $\boldsymbol\alpha$--$\boldsymbol\alpha$ autocorrelation, assembling the complex dielectric function $\boldsymbol\varepsilon(\omega)$ from time-domain response.
+
+\section{Results}\label{sec:results}
+
+We organise our results in three parts. First, we show that fine-tuning a \texttt{MACE} foundation model yields a field-aware foundation, \texttt{MACE-Field-MP-0}, that preserves its original energy/force accuracy while acquiring transferable predictions of Born effective charges, polarisabilities and derived refractive indices across chemistry. Second, we test whether the same architecture can learn Berry-phase polarisation branches and spontaneous polarisation across many ferroelectrics. Third, we demonstrate that both single-material and foundation variants can drive finite-field molecular dynamics to reproduce hysteresis loops and vibrational spectra. Together, these experiments probe the framework as both a general computational tool and a practical model for specific materials.
+
+\subsection{Field-aware foundation model: \texttt{MACE-Field-MP-0}}
+\label{subsec:fine-tuning_mace_mp_0b3}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{figures/finetuned-energy-forces-stress-parity.png}
+\caption{\textbf{MPtrj replay-set parity for \texttt{MACE-Field-MP-0}.} Parities on the Materials Project replay set of 10{,}000 sub-selected structures. Colour bars show the log number of data points. \textbf{Top-left:} Energy parity (eV). \textbf{Top-right:} Forces parity with all components combined (eV/\AA). \textbf{Bottom:} Stress parity for diagonal components (left) and off-diagonal components (right) (eV/\AA$^3$).}
+\label{fig:replay_parity}
+\end{figure}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{figures/finetuned-becs-polarisability-parity.png}
+\caption{\textbf{MP-Dielectric parity for \texttt{MACE-Field-MP-0}.} Parities for Born effective charges and electronic polarisabilities from the MP-Dielectric dataset (train, validation and test combined). Colour bars show the log number of data points. \textbf{Top:} Born effective charge tensor ($e$) parity for diagonal (left) and off-diagonal (right) components. \textbf{Bottom:} Polarisability tensor ($e/(\text{V}\,\text{\AA})$) parity for diagonal (left) and off-diagonal (right) components.}
+\label{fig:dielectric_parity}
+\end{figure}
+
+\subsubsection{Multihead fine-tuning and parities}
+
+We start from the publicly released \texttt{MACE-MP-0b3} foundation model~\cite{batatia2025foundationmodelatomisticmaterials}, trained on the Materials Project MPtrj trajectories for energies, forces, and stresses, and make it field-aware by enabling the \texttt{MACE-Field} coupling blocks while keeping the original backbone and readout unchanged. For this ``\texttt{MACE-Field-MP-0}'' model, we perform multiheaded fine-tuning supervised on: a ``mp-dielectric'' head with DFPT Born effective charges and electronic polarisabilities from the MP-Dielectric dataset (Sec.~\ref{sec:mp_dielectric}); a ``mp-ferroelectric'' head with DFPT polarisations from the MP-Ferroelectric dataset (Sec.~\ref{sec:mp_ferroelectric}); and a pre-trained head with energies, forces and stresses from a replay set of 10{,}000 structures sub-selected from MPtrj. This ``replay + field'' protocol is designed to add dielectric response while preserving the accuracy of the underlying foundation model on its original training distribution.
+
+Fig.~\ref{fig:replay_parity} shows parity plots on the MPtrj replay set, which remain tightly clustered around the diagonal for energies, forces (all components combined), and both diagonal and off-diagonal stress components, with no visible systematic bias. In other words, adding field-coupling layers and supervising on dielectric labels does not degrade the core potential, so \texttt{MACE-Field-MP-0} retains a high-quality general-purpose force field after fine-tuning.
+
+Turning to dielectric response, Fig.~\ref{fig:dielectric_parity} reports parities for individual BEC tensor components and electronic polarisabilities on the MP-Dielectric train/validation/test splits combined. \texttt{MACE-Field-MP-0} reproduces DFPT $Z^*$ and $\alpha$ across chemistry with near-diagonal trends and narrow scatter, including both diagonal and off-diagonal entries. This indicates that a single electric-enthalpy functional $\mathcal{F}(\mathbf{R},\mathbf{E})$, inherited from a foundation model and fine-tuned on $\sim 6$~\si{k} DFPT-labelled structures, is sufficient to capture linear response over a broad chemical space.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{figures/density-comparison-becs-epsinf.png}
+\caption{\textbf{Density distribution of BECs and electronic dielectric constants.} KDE density curves for the Born effective charges $Z^*$ (left) and the high-frequency dielectric constants $\varepsilon_{\infty}$ (right). \textbf{Solid blue:} distribution predicted by the fine-tuned \texttt{MACE-Field} model on the sub-selected MPtrj dataset. \textbf{Dashed orange:} distribution predicted by the fine-tuned \texttt{MACE-Field} model on the MP-Dielectric dataset. \textbf{Dotted green:} distribution from the reference DFPT MP-Dielectric dataset.}
+\label{fig:bec_alpha_kde}
+\end{figure}
+
+To probe distributional behaviour, Fig.~\ref{fig:bec_alpha_kde} compares kernel-density estimates of the BEC and polarisability/electronic-dielectric components predicted on (i) the MPtrj replay set and (ii) the MP-Dielectric structures, against the reference DFPT distributions. The three curves closely overlap for both BECs and electronic dielectrics/polarisabilities, with the \texttt{MACE-Field-MP-0} model neither collapsing toward overly narrow peaks nor developing spurious heavy tails. This suggests that the inherited foundation prior, combined with moderate DFPT supervision, is enough to reconstruct realistic response distributions even on structures for which DFPT labels were never provided (the replay-only MPtrj configurations). Notably, \texttt{MACE-Field-MP-0} can capture the small or zero BECs of many atoms in neutral, bulk insulating crystal structures present in the MPtrj dataset, which are largely absent in the MP-Dielectric dataset. In practical terms, this means that a single model, trained once, can now be used as a general-purpose force field that also supplies consistent dielectric response across tens of thousands of inorganic structures, enabling workflows where dielectric properties are treated on the same footing as energies and forces.
+
+\subsubsection{Direct prediction of dielectric constants}
+\label{sec:direct_eps}
+
+As \texttt{MACE-Field-MP-0} can predict both Born effective charges and polarisability (the electric susceptibility), we investigate whether we may combine this with analytical Hessians in \texttt{MACE} to evaluate the electronic and ionic dielectric constants directly, without supervising on dielectric tensors themselves.
+
+Concretely, we first obtain the high-frequency (purely electronic) dielectric tensor directly from the predicted polarisability using Eq.~\eqref{eq:eps_from_alpha}; the electronic contribution is a straightforward algebraic post-processing of a primary model output.
+
+The ionic contribution requires vibrational information. Here we exploit recent work on analytic Hessians for MACE-type models~\cite{Gonnheimer2025}, which provides second derivatives of the energy with respect to atomic displacements at negligible additional cost compared to ordinary force evaluation. The ionic dielectric constant is obtained from the \texttt{MACE-Field-MP-0} BECs and \texttt{MACE-MP-0b3} Hessians following Sec.~\ref{sec:dielectric_math}.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{figures/finetuned-dielectric-constants-tight.png}
+\caption{\textbf{MP-Dielectric parity for predicted ionic and electronic dielectric constants using \texttt{MACE-Field-MP-0}.} \textbf{Top:} Parity for the diagonal (left) and off-diagonal (right) components of the ionic dielectric constant. \textbf{Bottom:} Parity for the diagonal (left) and off-diagonal (right) components of the electronic dielectric constant.}
+\label{fig:eps_parity}
+\end{figure}
+
+Figure~\ref{fig:eps_parity} summarises the parity between the DFPT reference dielectric tensors and the \texttt{MACE-Field-MP-0} predictions for both ionic and electronic contributions (diagonal and off-diagonal components, with train/validation/test splits combined). The electronic dielectric constants closely follow the DFPT values, as expected from the strong agreement already observed for $\boldsymbol{\alpha}$. By contrast, the ionic dielectric constants, while still broadly following a near-diagonal trend, exhibit substantially larger scatter. This is not surprising: the ionic dielectric tensor depends on both $Z^*$ and the phonon spectrum via Eq.~\eqref{eq:eps_ion_static}, and is therefore sensitive to errors in both the BECs and the Hessian. In particular, the underlying \texttt{MACE-MP-0} foundation model is known to exhibit a systematic softening of the forces~\cite{Deng2025}; because the ionic dielectric response involves the \emph{inverse} of the Hessian, any such noise or bias in the curvature is amplified in $\boldsymbol{\varepsilon}_{\mathrm{ion}}$.
+
+\subsubsection{Matbench dielectric benchmark}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.8\linewidth]{figures/matbench.png}
+\caption{\textbf{Matbench dielectric refractive index results for the fine-tuned \texttt{MACE-Field} foundation model.} Refractive-index parity showing the performance of the fine-tuned \texttt{MACE-Field} model on the Matbench v0.1 test dataset for predicting refractive index from structure. The colour bar shows the log number of data points. \textbf{Inset:} 99\% percentile of data points.}
+\label{fig:refractive_index_parity}
+\end{figure}
+
+As an external benchmark, we test \texttt{MACE-Field-MP-0} on the Matbench dielectric task~\cite{Dunn2020}. Using the learned $\alpha$ to construct $\varepsilon_\infty$ and $n$ (see Eqs.~(\ref{eq:eps_from_alpha}), (\ref{eq:eps_poly}) and~(\ref{eq:refractive_index})), we obtain a well-calibrated parity on the Matbench v0.1 test set (Fig.~\ref{fig:refractive_index_parity}), with most points concentrated near the diagonal and only a small fraction of high-index systems forming a modest tail. Crucially, this Matbench performance is obtained without directly training on Matbench labels: the model is used ``as is'' as a force field that also predicts $Z^*$, $\alpha$, and derived optical properties. Yet its performance is comparable to the top-performing model \texttt{MODNet}~\cite{DeBreuck2021} and to \texttt{AnisoNet}~\cite{anisonet-2024}. However, this benchmark should be taken with caution as there may be some data leakage between the MP-Dielectric dataset used to train \texttt{MACE-Field-MP-0} and the \texttt{matbench\_dielectric} test set.
+
+\subsubsection{Error and outlier analysis}
+
+In Fig.~\ref{fig:bec_error_dist} we summarise the error distribution for BEC components, highlighting that large deviations are confined to a small number of outliers, predominantly reactive non-metallic elements such as oxygen and metalloids like tellurium, which typically exhibit negative BECs but are positive in the MP-Dielectric dataset. In Table~\ref{tab:bec-outliers} we list the top ten most erroneous BEC predictions by \texttt{MACE-Field-MP-0} compared to the DFPT reference. Notably, the majority of mismatches involve elements that would typically be expected to have negative BECs. Worse, the DFPT BECs violate the acoustic sum rule and are clearly incorrect. Despite these outliers, \texttt{MACE-Field-MP-0} obeys the ASR by construction and so predicts sensible BECs for these structures, which explains the disparity. This illustrates a pragmatic benefit of the physics-informed setup: by enforcing charge-neutrality and the ASR at the model level, we can in some cases ``repair'' inconsistent training labels and obtain more physically plausible predictions than the raw DFPT export.
+
+Overall, these results demonstrate \texttt{MACE-Field-MP-0} as a field-aware foundation model that (i) preserves its original accuracy on energies, forces and stresses, and (ii) acquires transferable predictions of Born effective charges, polarisabilities, and derived refractive indices across diverse inorganic materials, all via fine-tuning of a single enthalpy functional.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{figures/bec_outliers.png}
+\caption{\textbf{Error analysis of outliers in BEC predictions.} \textbf{Left:} top 1\% most erroneous BEC predictions and their corresponding chemical species. \textbf{Right:} bar chart showing which elements most frequently appear in these outliers.}
+\label{fig:bec_error_dist}
+\end{figure}
+
+\subsection{Polarisation across distortion paths and spontaneous $P_s$}
+\label{subsection:polarisation_branches}
+
+In this experiment, we assess the capability of \texttt{MACE-Field} to learn ferroelectric polarisation branches from the MP-Ferroelectric distortion-path dataset (Sec.~\ref{sec:mp_ferroelectric}). 
+
+Figure~\ref{fig:pol-parity} compares DFPT Berry-phase labels with the \emph{learned} polarisations obtained as 
+$\mathbf P=-\Omega^{-1}\partial\mathcal F/\partial\mathbf E$ from (left) \texttt{MACE-Field} trained directly on polarisation labels and (right) from \texttt{MACE-Field-MP-0} (see Sec.~\ref{subsec:fine-tuning_mace_mp_0b3}). $R^2$, RMSE and MAE are reported for each model for the training (grey circles), validation (blue circles) and testing (orange squares) sets. For the directly trained model, polarisations from all materials and distortion paths are well captured, with a good test-set RMSE of $2.7$~\si{\micro C / cm^2}. Unfortunately, \texttt{MACE-Field-MP-0} struggles to capture polarisations with comparable fidelity.
+
+The spontaneous polarisation is obtained as the difference in polarisation between the polar and non-polar reference structures at the endpoints of a given distortion path. Because the polarisation is multivalued modulo a quantum, all polarisations along a path must first be mapped onto a common branch to define this difference unambiguously. The parities in Fig.~\ref{fig:spol-parity} (one point per material; grey circles for the training set, blue circles for the validation set, and orange squares for the test set) compare DFPT reference values with \texttt{MACE-Field} predictions from (left) the directly trained model and (right) \texttt{MACE-Field-MP-0}. Consistent with the pointwise parities, the directly trained model reproduces the spontaneous polarisations accurately, whereas \texttt{MACE-Field-MP-0} shows substantially larger deviations.
+
+\begin{table}[t]
+  \centering
+  \input{bec_outliers_table}
+  \caption{\textbf{Top 10 BEC outliers by material.} Largest erroneous BEC predictions (unit of \si{e}) by the fine-tuned \texttt{MACE-Field} model. The first listed element has the largest difference between the MP-Dielectric reference values and the \texttt{MACE-Field} prediction. The second and third elements' BECs in the material are then listed. Notably, all of these outliers correspond to clearly incorrect BECs in the MP-Dielectric dataset; this is most evident from the fact that they do not obey the acoustic sum rule (ASR). The \texttt{MACE-Field} predictions do obey the ASR and give sensible BECs.}
+  \label{tab:bec-outliers}
+\end{table}
+
+To illustrate the branch structure, Fig.~\ref{fig:pol-branches}(a) shows the $\hat{z}$ Cartesian polarisation branches for \ce{Cr4Li4O16P4} from the test set. The directly trained \texttt{MACE-Field} model reproduces both the magnitude and slope of the Berry-phase branches and does so without any spurious branch hopping. Figure~\ref{fig:pol-branches}(b) then provides a global view of branch behaviour across the full dataset (train, validation, and test combined): it shows a combined violin and ``fan'' representation (shaded bands indicating the 95\% percentile range) of the polarisation, normalised by the corresponding polarisation quantum, as a function of the distortion parameter. At each distortion step, the predicted polarisation distributions closely overlap the DFPT reference, demonstrating that the model captures realistic polarisation branches even in the presence of the multivalued nature of $\mathbf{P}$.
+
+From a methodological standpoint, the mismatch between the directly trained model and \texttt{MACE-Field-MP-0} is informative. It suggests that while foundation-model pretraining is highly effective for local linear response (BECs, electronic polarisabilities), capturing global Berry-phase branch structure and spontaneous polarisation requires dedicated supervision and model capacity. Not all response quantities transfer equally well, which is important for future efforts on universal, multi-task materials models.
+
+\begin{figure}[t]
+  \centering
+  \subfigure[]{
+    \includegraphics[width=0.48\linewidth]{figures/polarisation-parity-splits.png}
+    \hfill
+    \includegraphics[width=0.48\linewidth]{figures/polarisation-parity-splits-mh.png}
+    \label{fig:pol-parity}
+  }
+  \\[0.01em]
+  \subfigure[]{
+    \includegraphics[width=0.48\linewidth]{figures/spontaneous-polarisation-parity-splits.png}
+    \hfill
+    \includegraphics[width=0.48\linewidth]{figures/spontaneous-polarisation-parity-splits-mh.png}
+    \label{fig:spol-parity}
+  }
+  \caption{\textbf{Polarisation parity comparisons.}
+  \textbf{(a)} Component-wise parity between DFPT Berry-phase polarisation and \texttt{MACE-Field} predictions over all materials and path frames; per-panel $R^2$, RMSE, and MAE are annotated. (Left) Trained-from-scratch model. (Right) fine-tuned foundation model.
+  \textbf{(b)} Parity of spontaneous polarisation $P_s$ (folded endpoint difference) on the training (grey circles), validation (blue circles) and test set (orange squares); each point is one material. (Left) Trained-from-scratch model. (Right) fine-tuned foundation model.}
+\end{figure}
+
+\begin{figure}[t]
+  \centering
+  \subfigure[]{
+    \includegraphics[width=0.48\linewidth]{figures/branches_ref_mace_Cr4Li4O16P4.pdf}
+    \label{fig:pol-branches:a}
+  }\hfill
+  \subfigure[]{
+    \includegraphics[width=0.48\linewidth]{figures/polar_paths_split_violin_fan.pdf}
+    \label{fig:pol-branches:b}
+  }
+  \caption{\textbf{Polarisation across distortion paths.}
+  \textbf{(a)} Example polarisation branches for \ce{Cr4Li4O16P4} from the test set; reference (solid) and \texttt{MACE-Field} (dashed) curves align across the path.
+  \textbf{(b)} Branch-invariant ``fan'' plot: for each Cartesian component, polarisation as a fraction of the corresponding polarisation quantum vs distortion parameter. Reference DFPT distributions (blue) and \texttt{MACE-Field} (orange) show close agreement; shaded regions indicate 95\% percentiles.}
+  \label{fig:pol-branches}
+\end{figure}
+
+\subsection{Finite-field MLMD for \ce{BaTiO3} and $\alpha$-\ce{SiO2}}
+\label{subsec:finite-field-mlmd}
+
+\begin{figure}[t]
+    \centering
+    \subfigure[]{
+      \includegraphics[width=.48\linewidth]{figures/PE_hysteresis.pdf}
+      \hfill
+      \includegraphics[width=.48\linewidth]{figures/BaTiO3-hysteresis-ft.png}
+      \label{fig:bto_hyst_ft}
+    }\\[0.01em]
+    \subfigure[]{
+      \includegraphics[width=.9\linewidth]{figures/SiO2_dielectric-ft.png}
+      \label{fig:sio2_spectra}
+    }
+    \caption{\textbf{Finite-field validation with a single \texttt{MACE-Field} model.}
+    \textbf{(a)} \ce{BaTiO3} polarisation--field hysteresis simulations from (left) the directly trained model and (right) the \texttt{MACE-Field-MP-0} model. The finite-field MD was done at 300~\si{K} under a sinusoidal uniform field along the polar axis. Remanent polarisations $P_r^{\pm}$ and coercive fields $E_c^{\pm}$ (labels) are extracted from the loops. 
+    \textbf{(b)} $\alpha$-quartz spectroscopy simulations at 300~\si{K} from (blue) the directly trained model and (orange) the \texttt{MACE-Field-MP-0} model. \emph{Top}, IR (left; from $\dot{\mathbf P}$--$\dot{\mathbf P}$) and Raman (right; from $\boldsymbol\alpha$--$\boldsymbol\alpha$) spectra; \emph{bottom}, real and imaginary parts of the dielectric function $\varepsilon(\omega)$ assembled from time-domain response. Spectra use Hann windows and Gaussian broadening $\sigma=20$~\si{cm^{-1}}; intensities are in arbitrary units.}
+    \label{fig:hyst_plus_spectra}
+\end{figure}
+
+To assess whether \texttt{MACE-Field} can drive field-dependent dynamics and reproduce time-domain observables, we mirror the unified-enthalpy protocol of \texttt{Allegro-pol}~\cite{allegro-pol-2025}. Using the same training signals (energy, forces, stress, Berry-phase $\mathbf{P}$, $Z^*$, and $\boldsymbol{\alpha}$), we perform NVT MLMD with a spatially uniform finite field (Sec.~\ref{sec:md-protocols}), comparing two models: a \texttt{MACE-Field} instance trained directly on MD trajectories and our fine-tuned \texttt{MACE-Field-MP-0} foundation model.
+
+For \ce{BaTiO3}, we apply a sinusoidal electric field of amplitude $E_0 = 36$~\si{MV/cm} and period 2~\si{ps} along the polar axis and record the polarisation--field hysteresis at 0~\si{K}. Both models generate robust hysteresis loops (Fig.~\ref{fig:hyst_plus_spectra}a). For the directly trained model we extract remanent polarisations $P^{\downarrow}_r \approx +39\,\mu\mathrm{C/cm}^2$ and $P^{\uparrow}_r \approx -38.5\,\mu\mathrm{C/cm}^2$, and coercive fields $E^{\downarrow}_c \approx -11.4$~\si{MV/cm} and $E^{\uparrow}_c \approx +11.5$~\si{MV/cm}, giving a fairly square, symmetric loop consistent with tetragonal switching under an alternating field. The \texttt{MACE-Field-MP-0} model yields a larger remanent polarisation, $P^{\downarrow}_r \approx +59\,\mu\mathrm{C/cm}^2$ and $P^{\uparrow}_r \approx -59\,\mu\mathrm{C/cm}^2$, but noticeably smaller coercive fields, $E^{\downarrow}_c \approx -5.9$~\si{MV/cm} and $E^{\uparrow}_c \approx +5.9$~\si{MV/cm}, corresponding to an effectively softer double well. In both cases, the Ti and O sublattices switch and then undergo a damped oscillation that relaxes within $\sim 0.5$~\si{ps}. However, the overall slope and width of the \texttt{MACE-Field-MP-0} loop are more slanted and over-broadened, with polarisation excursions approaching $\pm 3\times 10^2\,\mu\mathrm{C/cm}^2$, giving a ``relaxor''-like character. This behaviour is consistent with the known systematic softening of forces in the underlying \texttt{MACE-MP-0} foundation model~\cite{Deng2025}, which amplifies the field-induced response of the lattice.
+
+For $\alpha$-quartz, we probe the linear response at 300~\si{K}. Spectra are obtained directly from the learned electric enthalpy via autocorrelations of derivative observables: IR from $\dot{\mathbf{P}}$--$\dot{\mathbf{P}}$ and Raman from $\boldsymbol{\alpha}$--$\boldsymbol{\alpha}$, with trajectory lengths of $\sim 200$~\si{ps}. As in Allegro-pol, we employ a Hann window, Gaussian broadening with $\sigma = 20$~\si{cm^{-1}}, and branch-invariant wrapping of the Berry-phase polarisation $\mathbf{P}(t)$. Figure~\ref{fig:hyst_plus_spectra}b shows the IR, Raman and complex dielectric function assembled from the time-domain response, and Table~\ref{tab:quartz_compare} collects the main quantitative descriptors.
+
+The directly trained \texttt{MACE-Field} model reproduces the three dominant IR peaks at $\omega_1 \approx 1036$~\si{cm^{-1}}, $\omega_2 \approx 428$~\si{cm^{-1}} and $\omega_3 \approx 759$~\si{cm^{-1}}, in excellent agreement (within $\sim 10$~\si{cm^{-1}}) with the \texttt{Allegro-pol} values~\cite{allegro-pol-2025}. The corresponding high-frequency dielectric constants $\varepsilon_{\parallel,\perp}^{\infty}$ and static values $\varepsilon_{\parallel,\perp}^{0}$ also match closely (parallel $\parallel$ and perpendicular $\perp$ to the polar axis): $\varepsilon_{\parallel}^{\infty} = 2.37$ and $\varepsilon_{\perp}^{\infty} = 2.13$ versus \texttt{Allegro-pol} $2.41$ and $2.37$, and $\varepsilon_{\parallel}^{0} = 4.56$, $\varepsilon_{\perp}^{0} = 4.44$ versus $4.73$ and $4.51$ (Table~\ref{tab:quartz_compare}). The overall IR, Raman and $-\operatorname{Im}\varepsilon(\omega)$ envelopes in Fig.~\ref{fig:hyst_plus_spectra}b are therefore essentially indistinguishable from the \texttt{Allegro-pol} reference, up to minor differences in line shape attributable to finite-trajectory statistics and analysis choices (windowing, broadening, thermostat).
+
+
+\begin{table}[t]
+\centering
+\setlength{\tabcolsep}{8pt}
+\begin{tabular}{lccc}
+\hline\hline
+Quantity & Allegro--pol & Direct & Foundation \\
+\hline
+$\omega_{1}$ (cm$^{-1}$) & 1041 & 1036 & 882 \\
+$\omega_{2}$ (cm$^{-1}$) & \phantom{0}420 & 428 & 352 \\
+$\omega_{3}$ (cm$^{-1}$) & \phantom{0}765 & 759 & 662 \\
+\hline
+$\varepsilon_{\parallel}^{\infty}$ & 2.41 & 2.37 & 1.93 \\
+$\varepsilon_{\perp}^{\infty}$     & 2.37 & 2.13 & 1.99 \\
+$\varepsilon_{\parallel}^{0}$      & 4.73 & 4.56 & 5.63 \\
+$\varepsilon_{\perp}^{0}$          & 4.51 & 4.44 & 4.92 \\
+\hline\hline
+\end{tabular}
+\caption{Comparison of $\alpha$-\ce{SiO2} spectroscopic quantities at 300~\si{K}: main IR peak positions $\omega_i$ (cm$^{-1}$), high-frequency dielectric constants $\varepsilon_{\parallel,\perp}^{\infty}$, and static dielectric constants $\varepsilon_{\parallel,\perp}^{0}$, parallel ($\parallel$) and perpendicular ($\perp$) to the polar axis. ``\texttt{Allegro-pol}'' values are taken from Ref.~\cite{allegro-pol-2025}; ``Direct'' and ``Foundation'' denote, respectively, the directly trained \texttt{MACE-Field} model and the fine-tuned \texttt{MACE-Field-MP-0} foundation model, all analysed using the same time-domain protocol (Hann window, Gaussian broadening $\sigma = 20$~\si{cm^{-1}}, branch-invariant wrapping of $\mathbf{P}(t)$). Peak positions are estimated from the plotted spectra with an uncertainty of $\pm 10$--$20$~\si{cm^{-1}}. The directly trained \texttt{MACE-Field} matches the \texttt{Allegro-pol} reference within this uncertainty, whereas the foundation model shows systematic red-shifts and enhanced static dielectric response, consistent with softened phonons.}
+\label{tab:quartz_compare}
+\end{table}
+
+The \texttt{MACE-Field-MP-0} foundation model retains the correct qualitative band structure but exhibits a systematically softened spectrum: the main IR peaks are red-shifted to $\omega_1 \approx 882$~\si{cm^{-1}}, $\omega_2 \approx 352$~\si{cm^{-1}} and $\omega_3 \approx 662$~\si{cm^{-1}}, and $\varepsilon_{\parallel,\perp}^{\infty}$ are underestimated ($1.93$ and $1.99$). At the same time, the static dielectric constants are overestimated, in particular $\varepsilon_{\parallel}^{0} \approx 5.63$, again consistent with an overly compliant lattice response. Nonetheless, the oscillator strengths and relative intensities remain reasonable, and the model still produces physically plausible IR, Raman and dielectric spectra directly from the unified electric-enthalpy functional.
+
+Overall, these \ce{BaTiO3} and $\alpha$-quartz case studies demonstrate that a single, explicitly field-aware \texttt{MACE-Field} model can be used to drive finite-field MD and to extract non-trivial time-domain observables. From a computational-science perspective, the model is not just an accurate regressor but a robust dynamical engine: over hundreds of picoseconds, long MD trajectories remain stable while the predicted response functions agree with DFPT and experiment at the level needed for spectroscopic and device-modelling applications.
+
+\section{Discussion}\label{sec:discussion}
+
+We introduced \texttt{MACE-Field}, a field-aware, $O(3)$-equivariant interatomic potential that learns a \emph{single}
+electric enthalpy $\mathcal F(\{\mathbf R\},\mathbf E)$ and obtains polarisation $\mathbf P$, Born effective charge $Z^*$, and polarisability $\boldsymbol\alpha$ by exact differentiation.
+A uniform field couples to latent spherical-tensor features via Clebsch--Gordan products, while the final readout
+remains a scalar. Trained on $\sim$2.5k ferroelectric distortion paths, a single model reproduces Berry-phase
+polarisations (including $P_s$) for $\sim$250 ferroelectric materials spanning 61 elements. Trained on $\sim$6k DFPT
+dielectric/BEC entries spanning 81 elements, a single model predicts $Z^*$ and $\boldsymbol\alpha$ with high fidelity
+(Figs.~\ref{fig:dielectric_parity} and~\ref{fig:refractive_index_parity}), and through analytic Hessians, recovers both electronic and
+ionic dielectric constants. Finally, single-material models for \ce{BaTiO3} and $\alpha$-\ce{SiO2} demonstrate that the same
+framework can drive finite-field MD and reproduce hysteresis loops, IR/Raman spectra, and dielectric functions
+(Fig.~\ref{fig:hyst_plus_spectra}). Conceptually, \texttt{MACE-Field} is therefore a prototype of a physics-informed, differentiable foundation model for materials~\cite{ChenOng2022,batatia2025foundationmodelatomisticmaterials}: it combines strong inductive biases (symmetries, enthalpy derivatives) with data-driven learning and can be retrofitted onto existing energy/force models. Because all observables share one scalar origin, Maxwell reciprocity, the acoustic sum
+rule, point-group tensor forms, and branch-invariant learning of Berry-phase $\mathbf P$ hold \emph{by construction}
+(Sec.~\ref{sec:identities}).
+\\
+
+\paragraph*{Key advances.}
+\begin{enumerate}
+  \item \textbf{Plug-in field coupling that \emph{inherits \texttt{MACE} foundations}.}
+  The field enters only through irrep-wise latent tensor products and equivariant mixing; the \texttt{ACE} graph
+  construction and scalar readout are unchanged. Consequently, existing \texttt{MACE} foundation weights
+  can be dropped in and fine-tuned to become field-aware. Our \texttt{MACE-Field-MP-0} model shows that this
+  inheritance preserves the accuracy of \texttt{MACE-MP-0b3} on energies, forces and stresses (Fig.~\ref{fig:replay_parity}),
+  while adding transferable predictions of $Z^*$, $\boldsymbol\alpha$, and derived optical properties.
+
+  \item \textbf{One model across diverse chemistry.}
+  Unlike prior unified-enthalpy demonstrations restricted to single materials, \texttt{MACE-Field} is trained
+  once across thousands of crystals covering $\gtrsim 80$ elements. The \texttt{MACE-Field-MP-0} dielectric foundation
+  model reproduces DFPT BECs and electronic polarisabilities across the MP-Dielectric set (Fig.~\ref{fig:dielectric_parity}),
+  and yields realistic distributions of response quantities on unseen MPtrj structures
+  (Fig.~\ref{fig:bec_alpha_kde}), and attains Matbench-dielectric performance comparable to dedicated
+  property-prediction models despite never training on Matbench labels (Fig.~\ref{fig:refractive_index_parity}).
+
+  \item \textbf{Time-domain finite-field validation.}
+  Single-material \texttt{MACE-Field} models for \ce{BaTiO3} and $\alpha$-\ce{SiO2} reproduce Allegro-pol-level
+  benchmarks for polarisation hysteresis and IR/Raman/dielectric spectra. The directly trained models
+  match IR peak positions and $\varepsilon^{\infty,0}_{\parallel,\perp}$ for $\alpha$-quartz to within the uncertainty
+  of the spectral analysis (Table~\ref{tab:quartz_compare}) and generate \ce{BaTiO3} loops with realistic
+  remanent polarisations and coercive fields (Fig.~\ref{fig:hyst_plus_spectra}a).
+\end{enumerate}
+\par\addvspace{.75\baselineskip} % or \medskip
+
+\paragraph*{What we learn from the fine-tuned foundation model.}
+\texttt{MACE-Field-MP-0} offers a first demonstration of a field-aware \emph{foundation} model: starting from \texttt{MACE-MP-0b3}, we add field-coupling blocks and perform multi-headed fine-tuning on DFPT BECs, polarisabilities, and a replay set of energies/forces/stresses. This succeeds remarkably well for linear
+dielectric response. The model captures $Z^*$ and $\boldsymbol\alpha$ across chemistry, reconstructs
+realistic refractive-index distributions, and (combined with analytic Hessians) yields reasonable electronic
+and ionic dielectric constants without direct supervision on $\varepsilon$ (Fig.~\ref{fig:eps_parity}). Outlier
+analysis reveals that the largest discrepancies in $Z^*$ often correspond to clear pathologies in the DFPT
+labels (violations of the acoustic sum rule), whereas the learned enthalpy automatically enforces ASR and
+produces physically sensible charges (Fig.~\ref{fig:bec_error_dist} and Table~\ref{tab:bec-outliers}).
+
+At the same time, \texttt{MACE-Field-MP-0} exposes important limitations of naïvely fine-tuning a general-purpose
+force field for field response. First, the ionic dielectric constants show significantly larger scatter than the
+electronic ones. This reflects the fact that $\boldsymbol{\varepsilon}_{\mathrm{ion}}$ depends on both $Z^*$ and the phonon
+spectrum via the inverse Hessian [Eq.~\eqref{eq:eps_ion_static}], and hence amplifies any residual bias in the
+underlying \texttt{MACE-MP-0} Hessians. The known softening of forces in \texttt{MACE-MP-0}~\cite{Deng2025} manifests
+as softened phonons, red-shifted IR peaks and overestimated static permittivities, both in the analytic
+$\varepsilon_0$ and in the time-domain spectra of $\alpha$-quartz (Fig.~\ref{fig:hyst_plus_spectra}b and Table~\ref{tab:quartz_compare}).
+
+Second, while cross-chemistry polarisation is learned very accurately by a \emph{directly trained}
+\texttt{MACE-Field} polarisation model, the fine-tuned \texttt{MACE-Field-MP-0} struggles to recover Berry phase
+polarisations and spontaneous $P_s$ across the MP-Ferroelectric paths (Fig.~\ref{fig:pol-parity}).
+Learning polarisation modulo the polarisation quantum via a folded loss is intrinsically challenging,
+particularly when combined with heterogeneous DFPT workflows and multitask supervision. Joint training
+on BECs provides strong local information, but the branch structure of $\mathbf P$ is a global, path-dependent
+object, and appears to require dedicated capacity and loss weight. In addition, MP-Ferroelectric and
+MP-Dielectric labels come from independent DFT calculations, so even subtle inconsistencies in geometry,
+functional, or convergence criteria effectively act as label noise when a single model is asked to reconcile
+both.
+
+Third, the foundation Raman spectrum for $\alpha$-quartz is strongly suppressed compared to both \texttt{Allegro-pol} and the directly trained model. Time-series analysis shows that the \texttt{MACE-Field-MP-0} polarisability $\boldsymbol\alpha(t)$ fluctuates only weakly along the thermal trajectory: the model reproduces static $\boldsymbol\alpha$ and $\varepsilon_\infty$, but underestimates the derivatives $\partial\boldsymbol\alpha/\partial Q_m$ that control Raman intensities. This is consistent with a training signal dominated by near-equilibrium $\boldsymbol\alpha$ labels across many materials, with relatively little supervision on how $\boldsymbol\alpha$ varies along specific vibrational modes of
+a given crystal, in contrast to the directly trained single-material model.
+
+Taken together, these observations suggest that \emph{field-aware foundations} such as \texttt{MACE-Field-MP-0} can provide broadly accurate $Z^*$, $\boldsymbol\alpha$, and derived dielectric constants
+across chemistry, while targeted, single-material (or small-chemistry) fine-tuning is still beneficial when
+high-quality polarisation branches, spontaneous $P_s$, or quantitative Raman spectra are required.
+\\
+
+\paragraph*{Outlook.}
+There are several directions to extend and exploit the \texttt{MACE-Field} framework:
+\begin{itemize}
+  \item \textbf{Better foundations and phonons.}
+  The behaviour of \texttt{MACE-Field-MP-0} underscores the importance of high-quality forces and Hessians.
+  Retraining foundations with tighter DFT settings, explicit phonon or elastic-constant targets, or
+  incorporating DFPT force-constant information into the loss could harden the phonon spectrum and
+  improve $\varepsilon_0$, hysteresis, and Raman response.
+
+  \item \textbf{Hybrid long-range and higher-order response.}
+  Combining \texttt{MACE-Field} with latent/Ewald or charge-equilibration terms while preserving derivative consistency would extend its reach to highly ionic or low-dimensional systems. Modest finite-field DFT datasets could be used to supervise selected second- and third-order susceptibilities
+  $\chi^{(2)}$/$\chi^{(3)}$, enabling data-driven electro-optic and nonlinear-optical modelling.
+
+  \item \textbf{From foundations to targeted specialists.}
+  Field-aware foundations such as \texttt{MACE-Field-MP-0} can serve as starting points for lightweight,
+  material- or family-specific fine-tuning that sharpens polarisation branches, $P_s$, and Raman
+  intensities without retraining from scratch. This hierarchical strategy mirrors current practice in
+  energy/force foundation models.
+
+  \item \textbf{High-throughput dielectric and ferroelectric discovery.}
+  A \texttt{MACE-Field} foundation fine-tuned on MP-Dielectric and MP-Ferroelectric can be deployed in
+  large-scale screening campaigns for ferroelectrics, multiferroics, hyperferroelectrics and high-$\kappa$
+  dielectrics, including finite-field MD to probe switching pathways, leakage, and finite-temperature
+  response.
+
+  \item \textbf{Broader applications.}
+  Beyond inorganic dielectrics, the same idea, a single enthalpy functional that is differentiable with respect to fields and structural degrees of freedom, could be applied to a wide range of systems where field response matters: electrolytes and solid--electrolyte interfaces in batteries, polar liquids and biomolecules in strong fields, heterogeneous catalysis under bias, and geophysical materials in the deep Earth. In each case, a reusable, field-aware force field would allow computational scientists in different communities to ask new ``what if'' questions about how materials behave under realistic operating conditions.
+\end{itemize}
+
+Methodologically, our work aligns with the broader push towards physics-informed machine learning in computational science, where enforcing physical structure in ML models improves robustness, interpretability and transfer across tasks. To conclude, by learning a single electric enthalpy and differentiating it, \texttt{MACE-Field} unifies $\mathbf P$, $Z^*$, and $\boldsymbol\alpha$ in a symmetry-consistent way that can still inherit weights from existing \texttt{MACE}
+foundations. To demonstrate, we fine-tuned the \texttt{MACE-MP-0b3} foundation model on datasets of polarisations, Born effective charges and polarisabilities; resulting in a field-aware foundation model: \texttt{MACE-Field-MP-0}. The results here show that a simple coupling of a uniform field to equivariant latent multipoles scales across chemistry and enables accurate, data-efficient finite-field simulations. We anticipate \texttt{MACE-Field} becoming a drop-in extension that endows large foundation models with field awareness,
+opening the door to routine, high-throughput prediction of dielectric and ferroelectric response in a broad
+range of complex inorganic materials.
+
+\section*{Code and Data Availability}
+
+The \texttt{MACE-Field} source code, together with training and evaluation scripts for all experiments, is available at \url{https://github.com/mdi-group/mace-field}.
+\\
+
+All datasets used in this study, including processed MP-Dielectric and MP-Ferroelectric splits, the \ce{BaTiO3} and $\alpha$-\ce{SiO2} trajectory sets, and analysis scripts to reproduce the figures, are available at \url{https://github.com/mdi-group/2025-04-mace-field}.
+\\
+
+\section*{Acknowledgments}
+
+KTB and BAAM acknowledge support from EPSRC funding (EP/Y014405/1). Via our membership of the UK's HEC Materials Chemistry Consortium, which is funded by EPSRC (EP/L000202), this work used the UK Materials and Molecular Modelling Hub for computational resources, MMM Hub, which is partially funded by EPSRC (EP/T022213/1, EP/W032260/1 and EP/P020194/1).
+
+\bibliography{bibliography}
+
+% \clearpage
+
+% \input{mace-field-supplementary}
+
+\end{document}
