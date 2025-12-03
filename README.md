@@ -30,7 +30,7 @@ MACE-Field is a field-aware $O(3)$-equivariant interatomic potential that provid
 
 ## 🧪 How to Use MACE-Field (via `mace-field` repo)
 
-See the separate `mace-field` code repository for full instructions. In brief:  
+See the separate [`mace-field`](https://github.com/mdi-group/mace-field)  code repository for full instructions. In brief:  
 
 1. Clone the `mace-field` repo.  
 2. (Optional) Initialize from an existing pretrained MACE foundation model.  
@@ -62,6 +62,7 @@ If you use MACE-Field in your work, please cite:
 
 ## 🔗 Links
 
+- [General learning of the electric response in inorganic materials](https://arxiv.org/abs/2508.17870v2) (Submitted)
 - [mace-field repository (code, examples, pretrained models)](https://github.com/mdi-group/mace-field) 
 
 ---
