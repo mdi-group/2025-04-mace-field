@@ -1,0 +1,65 @@
+# --- run / bookkeeping ---
+name: mace-field-mp-0b3-medium-mh
+# launcher: torchrun
+distributed: true
+device: cuda
+seed: 123
+default_dtype: float32
+restart_latest: true
+keep_checkpoints: true
+eval_interval: 1
+num_workers: 8
+
+# --- data ---
+# One head with multiple training files (list); validation taken as a fraction
+heads:
+  mp-dielectric:
+    train_file: ["data/dielectric-train.xyz"]
+    valid_file: ["data/dielectric-valid.xyz"]
+    test_file: ["data/dielectric-test.xyz"]
+  mp-ferroelectric:
+    train_file: ["data/ferroelectric-train.xyz"]
+    valid_file: ["data/ferroelectric-valid.xyz"]
+    test_file: ["data/ferroelectric-test.xyz"]
+
+# Optional replay (foundation) data for multihead finetuning
+pt_train_file: "data/mp_traj_selected.xyz"
+multiheads_finetuning: true  # set true if you actually want replay finetuning
+
+# If you want to use per-element offsets learned by the foundation model
+E0s: foundation
+
+# --- model / loss ---
+foundation_model: "mace-mp-0b3-medium.model"
+model: "ScaleShiftFieldMACE"
+loss: "universal_field"
+error_table: "PerAtomRMSEstressvirialsfield"
+
+# --- which labels to compute/use ---
+compute_forces: true
+compute_becs: true
+compute_polarisation: true
+compute_polarisability: true
+enable_cueq: true
+
+# --- optimization / training ---
+lr: 0.0001
+ema: true
+ema_decay: 0.999
+amsgrad: true
+batch_size: 1
+valid_batch_size: 1
+max_num_epochs: 100
+patience: 50
+
+# matpes labels
+energy_weight: 1.0
+forces_weight: 100.0
+stress_weight: 1.0
+
+# ferroelectric label
+polarisation_weight: 100.0
+
+# dielectric labels
+becs_weight: 100.0
+polarisability_weight: 100.0
