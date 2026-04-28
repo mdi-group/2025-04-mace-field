@@ -1,51 +1,40 @@
 
-torchrun --standalone --nproc_per_node=2 ../../mace/cli/run_train.py \
-    --name="MACE-field-ferroelectrics" \
-    --train_file="ferroelectric.xyz" \
-    --valid_fraction=0.10 \
+torchrun --standalone --nproc_per_node="gpu" ../../../mace/mace-field/mace/cli/run_train.py \
+    --name="MACE-Field-MP-Ferroelectrics-3" \
+    --train_file="MP-Ferroelectrics-train.xyz" \
+    --test_file="MP-Ferroelectrics-test.xyz" \
+    --valid_file="MP-Ferroelectrics-valid.xyz" \
     --E0s="average" \
     --loss='universal_field' \
-    --energy_weight=0.1 \
-    --forces_weight=1.0 \
-    --stress_weight=0.0 \
-    --polarisation_weight=1e5 \
+    --energy_weight=1.0 \
+    --forces_weight=100.0 \
+    --stress_weight=1.0 \
+    --polarization_weight=10.0 \
     --becs_weight=0.0 \
-    --polarisability_weight=0.0 \
-    --compute_polarisation=True \
+    --polarizability_weight=0.0 \
+    --compute_polarization=True \
     --compute_becs=True \
-    --compute_polarisability=True \
+    --compute_polarizability=True \
     --compute_forces=True \
     --compute_stress=True \
-    --eval_interval=1 \
-    --error_table='PerAtomRMSEstressvirialsfield' \
-    --model="ScaleShiftFieldMACE" \
-    --interaction_first="RealAgnosticResidualInteractionBlock" \
-    --interaction="RealAgnosticResidualInteractionBlock" \
-    --num_interactions=2 \
-    --correlation=3 \
-    --r_max=5.0 \
-    --max_L=1 \
-    --max_ell=3 \
+    --model="MACEField" \
     --num_channels=128 \
-    --num_radial_basis=10 \
-    --MLP_irreps="16x0e" \
-    --num_workers=1 \
+    --num_workers=8 \
     --lr=0.005 \
-    --weight_decay=1e-8 \
+    --swa \
     --ema \
     --ema_decay=0.995 \
     --scheduler_patience=10 \
-    --max_num_epochs=10 \
-    --patience 150 \
+    --max_num_epochs=1000 \
+    --patience=100 \
     --amsgrad \
     --distributed \
     --device="cuda" \
     --enable_cueq True \
-    --seed=3 \
+    --seed=23 \
     --default_dtype="float64" \
     --save_cpu \
-    --batch_size 1 \
-    --valid_batch_size 1 \
+    --batch_size 2 \
+    --valid_batch_size 2 \
     --restart_latest \
     --plot=True \
-    --plot_frequency 10 \

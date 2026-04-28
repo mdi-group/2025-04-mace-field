@@ -1,6 +1,6 @@
 
-torchrun --standalone --nproc_per_node="gpu" ../../mace/cli/run_train.py \
-    --name="MACE-field-SiO2-newnew" \
+torchrun --standalone --nproc_per_node="gpu" ../../../mace/mace-field/mace/cli/run_train.py \
+    --name="MACE-field-SiO2" \
     --train_file="SiO2-preprocessed.xyz" \
     --valid_fraction=0.20 \
     --E0s="average" \
@@ -8,33 +8,22 @@ torchrun --standalone --nproc_per_node="gpu" ../../mace/cli/run_train.py \
     --energy_weight=1.0 \
     --forces_weight=50.0 \
     --stress_weight=1.0 \
-    --becs_weight=250.0 \
-    --polarisability_weight=500.0 \
-    --polarisation_weight=100.0 \
-    --compute_polarisation=True \
+    --becs_weight=100.0 \
+    --polarizability_weight=200.0 \
+    --polarization_weight=10.0 \
+    --compute_polarization=True \
     --compute_becs=True \
-    --compute_polarisability=True \
+    --compute_polarizability=True \
     --compute_forces=True \
     --compute_stress=True \
-    --eval_interval=1 \
-    --error_table='PerAtomRMSEstressvirialsfield' \
-    --model="ScaleShiftFieldMACE" \
-    --interaction_first="RealAgnosticResidualInteractionBlock" \
-    --interaction="RealAgnosticResidualInteractionBlock" \
-    --num_interactions=2 \
-    --correlation=3 \
-    --r_max=5.0 \
-    --max_L=1 \
-    --max_ell=3 \
+    --model="MACEField" \
     --num_channels=64 \
-    --num_radial_basis=10 \
-    --MLP_irreps="16x0e" \
-    --num_workers=1 \
+    --num_workers=8 \
     --lr=0.01 \
-    --weight_decay=1e-8 \
     --ema \
-    --ema_decay=0.995 \
+    --ema_decay=0.99 \
     --scheduler_patience=10 \
+    --patience=100 \
     --max_num_epochs=1000 \
     --amsgrad \
     --distributed \
@@ -43,7 +32,7 @@ torchrun --standalone --nproc_per_node="gpu" ../../mace/cli/run_train.py \
     --seed=23 \
     --default_dtype="float64" \
     --save_cpu \
-    --batch_size 4 \
-    --valid_batch_size 4 \
+    --batch_size 8 \
+    --valid_batch_size 8 \
     --restart_latest \
     --plot=True \
