@@ -1,0 +1,105 @@
+{
+  "csv_out": "/home/brad/repositories/2025-04-mace-field/scripts/Dielectrics/MP-Dielectrics-vs-matbench-dielectric-overlap.csv",
+  "fraction_matbench_overlap_records": 0.9850965575146935,
+  "fraction_mp_overlap_records": 0.6411620294599017,
+  "json_out": "/home/brad/repositories/2025-04-mace-field/scripts/Dielectrics/MP-Dielectrics-vs-matbench-dielectric-overlap.json",
+  "matbench_cache": "/home/brad/repositories/2025-04-mace-field/scripts/Dielectrics/matbench_dielectric.json.gz",
+  "matbench_url": "https://ml.materialsproject.org/projects/matbench_dielectric.json.gz",
+  "matcher": {
+    "angle_tol": 5.0,
+    "ltol": 0.2,
+    "stol": 0.3
+  },
+  "mp_dataset": "/home/brad/repositories/2025-04-mace-field/scripts/Dielectrics/MP-Dielectrics.extxyz",
+  "n_common_formula_buckets": 3925,
+  "n_matbench_overlap_records": 4693,
+  "n_matbench_records": 4764,
+  "n_mp_overlap_material_ids": 4701,
+  "n_mp_overlap_records": 4701,
+  "n_mp_records": 7332,
+  "n_mp_unique_material_ids": 7332,
+  "n_overlap_groups": 4625,
+  "n_overlap_pairs": 4856,
+  "top_overlap_formulas": [
+    {
+      "formula": "SiO2",
+      "n_overlap_groups": 46
+    },
+    {
+      "formula": "ZnS",
+      "n_overlap_groups": 13
+    },
+    {
+      "formula": "LiMnPO4",
+      "n_overlap_groups": 10
+    },
+    {
+      "formula": "FeOF",
+      "n_overlap_groups": 9
+    },
+    {
+      "formula": "LiFeSiO4",
+      "n_overlap_groups": 9
+    },
+    {
+      "formula": "SiC",
+      "n_overlap_groups": 9
+    },
+    {
+      "formula": "H2O",
+      "n_overlap_groups": 8
+    },
+    {
+      "formula": "LiCoSiO4",
+      "n_overlap_groups": 8
+    },
+    {
+      "formula": "Al2O3",
+      "n_overlap_groups": 7
+    },
+    {
+      "formula": "AlPO4",
+      "n_overlap_groups": 7
+    },
+    {
+      "formula": "BN",
+      "n_overlap_groups": 7
+    },
+    {
+      "formula": "FePO4",
+      "n_overlap_groups": 7
+    },
+    {
+      "formula": "CdI2",
+      "n_overlap_groups": 6
+    },
+    {
+      "formula": "Li2MnF4",
+      "n_overlap_groups": 6
+    },
+    {
+      "formula": "LiFePO4",
+      "n_overlap_groups": 6
+    },
+    {
+      "formula": "NaH9O5",
+      "n_overlap_groups": 6
+    },
+    {
+      "formula": "VOF3",
+      "n_overlap_groups": 6
+    },
+    {
+      "formula": "WO3",
+      "n_overlap_groups": 6
+    },
+    {
+      "formula": "Ag2S",
+      "n_overlap_groups": 5
+    },
+    {
+      "formula": "Al(HO)3",
+      "n_overlap_groups": 5
+    }
+  ]
+}

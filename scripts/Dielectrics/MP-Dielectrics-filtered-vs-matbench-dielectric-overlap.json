@@ -1,0 +1,124 @@
+{
+  "csv_out": "/home/brad/repositories/2025-04-mace-field/scripts/Dielectrics/MP-Dielectrics-filtered-vs-matbench-dielectric-overlap.csv",
+  "fraction_matbench_overlap_records": 0.607472712006717,
+  "fraction_mp_overlap_records": 0.5381556523385722,
+  "json_out": "/home/brad/repositories/2025-04-mace-field/scripts/Dielectrics/MP-Dielectrics-filtered-vs-matbench-dielectric-overlap.json",
+  "matbench_cache": "/home/brad/repositories/2025-04-mace-field/scripts/Dielectrics/matbench_dielectric.json.gz",
+  "matbench_url": "https://ml.materialsproject.org/projects/matbench_dielectric.json.gz",
+  "matcher": {
+    "angle_tol": 5.0,
+    "ltol": 0.2,
+    "stol": 0.3
+  },
+  "mp_dataset": "/home/brad/repositories/2025-04-mace-field/scripts/Dielectrics/MP-Dielectrics-filtered.extxyz",
+  "n_common_formula_buckets": 2603,
+  "n_matbench_overlap_records": 2894,
+  "n_matbench_records": 4764,
+  "n_mp_overlap_material_ids": 2842,
+  "n_mp_overlap_records": 2842,
+  "n_mp_records": 5281,
+  "n_mp_unique_material_ids": 5281,
+  "n_overlap_groups": 2842,
+  "n_overlap_pairs": 2894,
+  "prediction_csv_out": "/home/brad/repositories/2025-04-mace-field/scripts/Dielectrics/MP-Dielectrics-filtered-matbench-refractive-index-predictions.csv",
+  "prediction_json_out": "/home/brad/repositories/2025-04-mace-field/scripts/Dielectrics/MP-Dielectrics-filtered-matbench-refractive-index-summary.json",
+  "prediction_metrics": {
+    "intercept": 1.8040350111907613,
+    "mae": 0.2776644774009548,
+    "n": 4759,
+    "r2": 0.2017290602773968,
+    "rmse": 1.8975935523572687,
+    "slope": 0.16780287080339257
+  },
+  "prediction_plot_out": "/home/brad/repositories/2025-04-mace-field/scripts/Dielectrics/MP-Dielectrics-filtered-matbench-refractive-index-parity.png",
+  "prediction_skip_summary": {
+    "cache_reused": true,
+    "n_requested": 4759,
+    "n_skipped_unsupported": null,
+    "n_supported": 4759,
+    "skipped_examples": [],
+    "supported_atomic_numbers": null
+  },
+  "top_overlap_formulas": [
+    {
+      "formula": "SiO2",
+      "n_overlap_groups": 28
+    },
+    {
+      "formula": "ZnS",
+      "n_overlap_groups": 13
+    },
+    {
+      "formula": "SiC",
+      "n_overlap_groups": 8
+    },
+    {
+      "formula": "BN",
+      "n_overlap_groups": 7
+    },
+    {
+      "formula": "AlPO4",
+      "n_overlap_groups": 5
+    },
+    {
+      "formula": "CdI2",
+      "n_overlap_groups": 5
+    },
+    {
+      "formula": "CuI",
+      "n_overlap_groups": 5
+    },
+    {
+      "formula": "H2",
+      "n_overlap_groups": 5
+    },
+    {
+      "formula": "LiAgF2",
+      "n_overlap_groups": 4
+    },
+    {
+      "formula": "LiMnPO4",
+      "n_overlap_groups": 4
+    },
+    {
+      "formula": "MgO",
+      "n_overlap_groups": 4
+    },
+    {
+      "formula": "S",
+      "n_overlap_groups": 4
+    },
+    {
+      "formula": "WO3",
+      "n_overlap_groups": 4
+    },
+    {
+      "formula": "Ag2S",
+      "n_overlap_groups": 3
+    },
+    {
+      "formula": "AgI",
+      "n_overlap_groups": 3
+    },
+    {
+      "formula": "Al2O3",
+      "n_overlap_groups": 3
+    },
+    {
+      "formula": "As2O3",
+      "n_overlap_groups": 3
+    },
+    {
+      "formula": "Ba2SrI6",
+      "n_overlap_groups": 3
+    },
+    {
+      "formula": "BeF2",
+      "n_overlap_groups": 3
+    },
+    {
+      "formula": "Cd(InSe2)2",
+      "n_overlap_groups": 3
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "definition": "predicted_n = sqrt(mean(diag(1 + polarizability_tensor)))",
+  "device": "cuda",
+  "dtype": "float32",
+  "head": "pt_head",
+  "metrics": {
+    "intercept": 1.8040350111907613,
+    "mae": 0.2776644774009548,
+    "n": 4759,
+    "r2": 0.2017290602773968,
+    "rmse": 1.8975935523572687,
+    "slope": 0.16780287080339257
+  },
+  "model_path": "/home/brad/repositories/2025-04-mace-field/scripts/Foundation/MACEField-omat-dielectric.model",
+  "n_structures": 4759,
+  "prediction_csv": "/home/brad/repositories/2025-04-mace-field/scripts/Dielectrics/MP-Dielectrics-filtered-matbench-refractive-index-predictions.csv",
+  "prediction_limit": null,
+  "prediction_plot": "/home/brad/repositories/2025-04-mace-field/scripts/Dielectrics/MP-Dielectrics-filtered-matbench-refractive-index-parity.png",
+  "skip_summary": {
+    "cache_reused": true,
+    "n_requested": 4759,
+    "n_skipped_unsupported": null,
+    "n_supported": 4759,
+    "skipped_examples": [],
+    "supported_atomic_numbers": null
+  }
+}
