@@ -1,53 +1,181 @@
-# MACE-Field: General learning of the electric response of inorganic materials
+# MACE-Field paper repository
 
-This repository hosts the source files associated with our paper *“General learning of the Electric Response of Inorganic Materials”* (August 2025).  
+This repository contains the manuscript source, processed datasets, trained checkpoints, finite-field molecular-dynamics trajectories, analysis scripts, and figure exports for the paper
 
-MACE-Field is a field-aware, $O(3)$-equivariant interatomic potential built as a plug-in extension to MACE, enabling dielectric/ferroelectric/finite-field simulations of inorganic solids in a symmetry-consistent, ML-based framework.
+> Bradley A. A. Martin, Alex M. Ganose, Venkat Kapil, Tingwei Li, and Keith T. Butler,  
+> *General learning of the electric response of inorganic materials*
 
----
+The companion codebase that implements the `MACEField` model itself lives in the separate [`mdi-group/mace-field`](https://github.com/mdi-group/mace-field) repository. This repository is the paper-specific reproducibility bundle built around that codebase.
 
-## 🚀 What is MACE-Field
+## What is in this repository
 
-- **Field-aware interatomic potential**: MACE-Field injects a uniform external electric field into each message-passing layer via a Clebsch–Gordan tensor product coupling to latent spherical-tensor features, then perturbs them through equivariant residual mixing. This preserves the standard MACE readout while enabling consistent treatment of the electric field across chemistry.
-- **Unified learning of electric response**: By learning a single electric enthalpy function $F(\{R\}, E)$ and differentiating it, MACE-Field delivers gauge-consistent predictions of key dielectric properties, e.g. polarisation $\mathbf{P}$, Born effective charges $Z^*$, and polarisability $\alpha$, along with the ability to carry out finite-field molecular dynamics or geometry relaxations.
-- **Cross-chemistry transferability**: Our models cover a broad range of inorganic chemistries, spanning many different elements and structure types. As demonstrated in the paper, the approach generalises beyond single-material case studies.
+- `mace-field.tex` and `mace-field-supplementary.tex`: current main manuscript and supplementary information.
+- `figures/`: canonical figure copies used by the manuscript.
+- `scripts/Foundation/`: OMAT-based multihead foundation-model fine-tuning, replay analysis, Hessian workflows, and dielectric post-processing.
+- `scripts/Dielectrics/`: Materials Project dielectric dataset assembly, filtering, train/valid/test splitting, and Matbench overlap analysis.
+- `scripts/Ferroelectrics/`: MP-Ferroelectric dataset assembly, direct ferroelectric training, and branch-aware polarisation analysis.
+- `scripts/BaTiO3/`: direct single-material BaTiO3 training plus hysteresis analysis and snapshot plots.
+- `scripts/SiO2/`: direct single-material alpha-quartz training plus spectroscopy, dielectric-relaxation, and mode-resolved Raman analysis.
+- `scripts/LAMMPs/`: production MLMD launchers, trajectory post-processing, and model export helpers used for the BaTiO3 and SiO2 runs.
 
----
+Each science subdirectory under `scripts/` now has its own README with folder-specific commands and key outputs:
 
-## 📄 About the Paper
+- [Foundation](scripts/Foundation/README.md)
+- [Dielectrics](scripts/Dielectrics/README.md)
+- [Ferroelectrics](scripts/Ferroelectrics/README.md)
+- [BaTiO3](scripts/BaTiO3/README.md)
+- [SiO2](scripts/SiO2/README.md)
+- [LAMMPs](scripts/LAMMPs/README.md)
 
-**Title:** *General learning of the Electric Response of Inorganic Materials* (2025)
+## Reproducibility assumptions
 
-**Abstract (short):**  
-MACE-Field is a field-aware $O(3)$-equivariant interatomic potential that provides a compact, derivative-consistent route to dielectric properties (polarisation, Born effective charges, polarisability) and finite-field simulations of inorganic crystal solids. By injecting a uniform external field into message-passing layers via an equivariant tensor coupling, and inheriting pretrained MACE foundation weights, MACE-Field converts existing MACE force-field models into field-aware ones with minimal changes. We demonstrate its effectiveness by training cross-chemistry models for ferroelectric polarisation, BECs/polarisability for dielectric materials (spanning 81 elements), and performing finite-field MD / dielectric-constant simulations for prototypical materials (e.g. BaTiO3, α-quartz), achieving DFPT-grade accuracy. 
+The committed outputs in this repository are enough to reproduce the paper figures without rerunning the full training and MD stack. Rebuilding the full pipeline from scratch does, however, assume the same broad software layout used during the project:
 
-**Key results:**  
-- Recovery of polarisation branches and spontaneous polarisation across non-polar → polar transformations.  
-- Accurate predictions of Born effective charges $Z^*$ and electronic polarisability $\alpha$ over a diverse dataset of inorganic materials.  
-- Successful finite-field molecular-dynamics and dielectric simulations for benchmark solids, including reproduction of ferroelectric hysteresis (BaTiO₃) and IR / Raman + dielectric spectra (α-quartz).
+1. The `mace-field` code repository checked out as a sibling code dependency, available at https://github.com/mdi-group/mace-field.
+2. A Python environment with `torch`, `ase`, `matplotlib`, `pandas`, `numpy`, `pymatgen`, `mp-api`, `mpcontribs-client`, and the local `mace-field` package available.
+3. For the MLMD workflows, `LAMMPS`, `Apptainer`, and the `macefield-lammps.sif` container used by the launch scripts. Available at https://github.com/orgs/mdi-group/packages.
+4. A Materials Project API key in `MP_API_KEY` for regenerating the MP-Dielectric and MP-Ferroelectric datasets.
 
----
+Some scripts still contain absolute paths reflecting the workstation layout above. The simplest route is to preserve that layout locally; otherwise, adjust the relevant path constants before rerunning heavy workflows.
 
-## 🧪 How to Use MACE-Field (via `mace-field` repo)
+## Quick start
 
-See the separate [`mace-field`](https://github.com/mdi-group/mace-field)  code repository for full instructions. In brief:  
+- Read the manuscript in [mace-field.tex](mace-field.tex) and [mace-field-supplementary.tex](mace-field-supplementary.tex).
+- Look at the final figure copies in [figures/](figures).
+- Use the subfolder READMEs in `scripts/` to trace each figure back to the exact training run, trajectory, and analysis command.
 
-1. Clone the `mace-field` repo.  
-2. (Optional) Initialize from an existing pretrained MACE foundation model.  
-3. Train or fine-tune on your dataset of interest (dielectrics, ferroelectrics, etc.).  
-4. Use the trained model to compute dielectric properties, perform finite-field geometry relaxations or molecular dynamics, and extract polarisation, BECs, polarisability, etc.  
+If you want to rebuild the main analysis outputs from the saved trajectories and checkpoints:
 
----
+```bash
+cd scripts/Foundation
+python run_foundation_workflow.py --model-path MACEField-omat-dielectric.model --head pt_head --device cuda --gpus 0,1 --force
+```
 
-## 🎯 Why MACE-Field Matters
+```bash
+cd scripts/Ferroelectrics
+python polarization_branches.py
+```
 
-MACE-Field addresses a major gap in the ML-interatomic potential literature: the ability to correctly treat external electric fields, essential for modelling dielectric, ferroelectric, and nonlinear-optical materials. By combining the strengths of MACE (speed, accuracy, symmetry-aware message passing) with a minimal and physically consistent extension for field coupling, MACE-Field offers a scalable, data-efficient, and widely transferable framework for routine finite-field simulations of inorganic materials. With growing interest in high-throughput materials discovery, this capability opens the door to exploring new dielectrics, ferroelectrics, and multifunctional materials at scale.  
+```bash
+cd scripts/BaTiO3
+python plot_hysteresis.py \
+  --curve OMAT ../LAMMPs/MD/runs/BaTiO3-mp-5986-sc1x1x1-0K-5GHz-hysteresis-2026-05-03_101740/BaTiO3-mp-5986/hysteresis.annotated.extxyz \
+  --curve Direct ../LAMMPs/MD/runs/BaTiO3-mp-5986-sc1x1x1-0K-5GHz-hysteresis-2026-05-03_101759/BaTiO3-mp-5986/hysteresis.annotated.extxyz \
+  --output-prefix plots/batio3_compare
+```
 
----
+```bash
+cd scripts/SiO2
+python mode_resolved_polarizability_derivatives.py --output-dir plots
+python Spectroscopy.py \
+  --curve OMAT ../LAMMPs/MD/runs/SiO2-mp-7000-sc1x1x1-300K-200ps-2026-05-03_101733/SiO2-mp-7000/production.annotated.extxyz \
+  --curve Direct ../LAMMPs/MD/runs/SiO2-mp-7000-sc1x1x1-300K-200ps-2026-05-03_101749/SiO2-mp-7000/production.annotated.extxyz \
+  --mode-resolved-dir plots \
+  --output-prefix plots/sio2_compare \
+  --save-plots --no-show
+```
 
-## 📚 Citation
+## End-to-end workflow
 
-If you use MACE-Field in your work, please cite:
+### 1. Regenerate cross-chemistry datasets
+
+MP-Dielectric:
+
+```bash
+cd scripts/Dielectrics
+python get-mp-dielectrics.py \
+  --api-key "$MP_API_KEY" \
+  --out MP-Dielectrics.extxyz \
+  --write-filtered \
+  --filtered-out MP-Dielectrics-filtered.extxyz \
+  --write-splits \
+  --split-prefix MP-Dielectrics-filtered \
+  --verbose
+```
+
+MP-Ferroelectric:
+
+```bash
+cd ~/repositories/2025-04-mace-field/scripts/Ferroelectrics
+python get_ferroelectric_dataset.py \
+  --api-key "$MP_API_KEY" \
+  --out MP-Ferroelectrics.xyz \
+  --write-splits \
+  --split-prefix MP-Ferroelectrics \
+  --no-allow-branch-cross-split \
+  --verbose
+```
+
+### 2. Train the direct and foundation models
+
+```bash
+cd scripts/Dielectrics && bash train-dielectric.sh
+cd scripts/Ferroelectrics && bash train_ferroelectrics.sh
+cd scripts/Foundation && bash train_foundation_mh.sh
+cd scripts/BaTiO3 && bash train_BaTiO3.sh
+cd scripts/SiO2 && bash train_SiO2.sh
+```
+
+### 3. Run the finite-field MLMD workflows
+
+```bash
+cd scripts/LAMMPs
+
+# BaTiO3 hysteresis
+MODEL_VARIANT=foundation ./run_batio3_hysteresis.sh
+MODEL_VARIANT=finetuned  ./run_batio3_hysteresis.sh
+
+# SiO2 production MLMD
+MODEL_VARIANT=foundation ./run_sio2_mlmd.sh
+MODEL_VARIANT=finetuned  ./run_sio2_mlmd.sh
+
+# SiO2 finite-field dielectric relaxation
+MODEL_VARIANT=foundation ./run_sio2_dielectric_relax.sh
+MODEL_VARIANT=finetuned  ./run_sio2_dielectric_relax.sh
+```
+
+### 4. Rebuild the manuscript figures
+
+The paper uses figure copies in `figures/`, but the source analyses live in the `scripts/` subdirectories. The table below shows the main mapping.
+
+| Manuscript topic | Source workflow | Canonical figure copy |
+| --- | --- | --- |
+| Foundation replay / dielectric parity | [scripts/Foundation](scripts/Foundation/README.md) | `figures/finetuned-energy-forces-stress-parity.png`, `figures/finetuned-becs-polarisability-parity.png`, `figures/finetuned-dielectric-constants-tight.png` |
+| Matbench dielectric check | [scripts/Dielectrics](scripts/Dielectrics/README.md) | `figures/MP-Dielectrics-filtered-matbench-refractive-index-parity.png` |
+| Ferroelectric parity / spontaneous polarisation | [scripts/Ferroelectrics](scripts/Ferroelectrics/README.md) | `figures/polarisation-parity-splits-mh.png`, `figures/spontaneous-polarisation-parity-splits-mh.png` |
+| BaTiO3 hysteresis and snapshots | [scripts/BaTiO3](scripts/BaTiO3/README.md) | `figures/batio3_compare.png`, `figures/batio3_switching_trace.png`, `figures/batio3_hysteresis_snapshots.png` |
+| SiO2 spectra and dielectric relaxation | [scripts/SiO2](scripts/SiO2/README.md) | `figures/sio2_compare.png`, `figures/sio2_thermo_trace.png`, `figures/sio2_representative_snapshots.png` |
+
+
+## Key figures
+
+### OMAT-based field-aware foundation model
+
+![Foundation dielectric parity](figures/finetuned-becs-polarisability-parity.png)
+
+### BaTiO3 finite-field hysteresis
+
+![BaTiO3 comparison](figures/batio3_compare.png)
+
+### Alpha-quartz spectroscopy and mode-resolved Raman analysis
+
+![SiO2 comparison](figures/sio2_compare.png)
+
+## Data and model artefacts
+
+This repository already includes:
+
+- processed MP-Dielectric and MP-Ferroelectric datasets and splits;
+- direct-model checkpoints for BaTiO3 and SiO2;
+- the OMAT-based foundation-model checkpoint used in the paper;
+- saved LAMMPS trajectories and annotated `extxyz` files for the main BaTiO3 and SiO2 results;
+- manuscript-ready plot exports and intermediate CSV/JSON summaries.
+
+That means most figure-generation steps can be rerun directly from the committed outputs without repeating the most expensive training and MD jobs.
+
+## Citation
+
+If you use this repository or the accompanying `MACEField` model in your own work, please cite the paper and the code repository.
 
 ```bibtex
 @misc{martin2025generallearningelectricresponse,
@@ -58,12 +186,3 @@ If you use MACE-Field in your work, please cite:
   archivePrefix={arXiv},
 }
 ```
----
-
-## 🔗 Links
-
-- [General learning of the electric response in inorganic materials](https://arxiv.org/abs/2508.17870v2) (Submitted)
-- [mace-field repository (code, examples, pretrained models)](https://github.com/mdi-group/mace-field) 
-
----
-
