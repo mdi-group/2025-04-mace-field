@@ -10,12 +10,6 @@ Important data files:
 
 ## Key plots
 
-### Training curve
-
-<p align="center">
-  <img src="results/MACE-Field-MP-Dielectrics_run-23_train_Default_stage_one.png" width="72%" alt="MP-Dielectrics training curve">
-</p>
-
 ### Matbench overlap and refractive-index check
 
 <p align="center">
