@@ -199,3 +199,13 @@ If you use this repository or the accompanying `MACEField` model in your own wor
   archivePrefix={arXiv},
 }
 ```
+
+# Acknowledgments
+This work has been supported by UKRI funding (EP/Y000552/1 and EP/Y014405/1).
+
+---
+
+## Contact
+
+- **MACE-Field**: bradley.martin@ucl.ac.uk  
+- Issues & feature requests: https://github.com/mdi-group/mace-field/issues
