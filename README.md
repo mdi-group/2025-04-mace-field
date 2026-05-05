@@ -170,11 +170,16 @@ The paper uses figure copies in `figures/`, but the source analyses live in the 
 <p align="center">
   <img src="figures/omat-replay-parities.png" width="49%" alt="Foundation replay parity">
   <img src="figures/omat-becs-parity.png" width="49%" alt="Foundation BEC parity">
+  <img src="figures/omat-polarisability-parity.png" width="49%" alt="Foundation polarisability parity">
+  <img src="figures/MACEField-eps_ionic_parity-omat.png" width="49%" alt="Foundation ionic dielectric parity">
 </p>
 
 ### BaTiO3 finite-field hysteresis
 
-![BaTiO3 comparison](figures/batio3_compare.png)
+<p align="center">
+  <img src="figures/batio3_compare.png" width="49%" alt="BaTiO3 comparison">
+  <img src="figures/batio3_switching_trace.png" width="49%" alt="BaTiO3 switching trace">
+</p>
 
 ### Alpha-quartz spectroscopy and mode-resolved Raman analysis
 
