@@ -11,19 +11,35 @@ Important data and model files:
 
 ## Key plots
 
-Direct ferroelectric model:
+### Training curve
 
-![Direct folded parity](analysis_outputs/polarization_branches/MACE-Field-MP-Ferroelectrics_parity_folded_splits.png)
+<p align="center">
+  <img src="results/MACE-Field-MP-Ferroelectrics_run-23_train_Default_stage_one.png" width="72%" alt="MP-Ferroelectrics training curve">
+</p>
 
-OMAT-based foundation comparison:
+### Folded parity and spontaneous polarisation
 
-![Foundation folded parity](analysis_outputs/polarization_branches/MACEField-omat-dielectric_parity_folded_splits.png)
+<p align="center">
+  <img src="analysis_outputs/polarization_branches/MACE-Field-MP-Ferroelectrics_parity_folded_splits.png" width="49%" alt="Direct folded parity">
+  <img src="analysis_outputs/polarization_branches/MACEField-omat-dielectric_parity_folded_splits.png" width="49%" alt="Foundation folded parity">
+</p>
 
-Spontaneous polarisation:
+<p align="center">
+  <img src="analysis_outputs/polarization_branches/MACE-Field-MP-Ferroelectrics_spontaneous_polarization_folded_splits.png" width="49%" alt="Direct spontaneous polarization parity">
+  <img src="analysis_outputs/polarization_branches/MACEField-omat-dielectric_spontaneous_polarization_folded_splits.png" width="49%" alt="Foundation spontaneous polarization parity">
+</p>
 
-![Direct spontaneous polarisation parity](analysis_outputs/polarization_branches/MACE-Field-MP-Ferroelectrics_spontaneous_polarization_raw_splits.png)
+### Branch pathways and distributions
 
-![Foundation spontaneous polarisation parity](analysis_outputs/polarization_branches/MACEField-omat-dielectric_spontaneous_polarization_folded_splits.png)
+<p align="center">
+  <img src="analysis_outputs/polarization_branches/MACE-Field-MP-Ferroelectrics_path_branches_000.png" width="49%" alt="Direct branch pathway example">
+  <img src="analysis_outputs/polarization_branches/MACEField-omat-dielectric_path_branches_000.png" width="49%" alt="Foundation branch pathway example">
+</p>
+
+<p align="center">
+  <img src="analysis_outputs/polarization_branches/MACE-Field-MP-Ferroelectrics_fractional_branch_distribution.png" width="49%" alt="Direct fractional branch distribution">
+  <img src="analysis_outputs/polarization_branches/MACEField-omat-dielectric_fractional_branch_distribution.png" width="49%" alt="Foundation fractional branch distribution">
+</p>
 
 ## Main entry points
 

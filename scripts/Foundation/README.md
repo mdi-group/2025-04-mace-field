@@ -15,15 +15,43 @@ The committed training and analysis outputs include:
 
 ## Key plots
 
-Replay / parity workflow:
+### Training curves
 
-![Foundation energy parity](analysis_outputs/foundation_workflow/parity/plots/energy_per_atom_parity.png)
+<p align="center">
+  <img src="results/MACEField-omat-dielectric_run-123_train_pt_head_stage_one.png" width="32%" alt="Foundation replay-head training curve">
+  <img src="results/MACEField-omat-dielectric_run-123_train_mp-dielectric_stage_one.png" width="32%" alt="Foundation dielectric-head training curve">
+  <img src="results/MACEField-omat-dielectric_run-123_train_mp-ferroelectric_stage_one.png" width="32%" alt="Foundation ferroelectric-head training curve">
+</p>
 
-![Foundation BEC parity](analysis_outputs/foundation_workflow/parity/plots/bec_parity.png)
+### Replay and response parity
 
-Analytic-Hessian dielectric workflow:
+<p align="center">
+  <img src="analysis_outputs/foundation_workflow/parity/plots/omat-energy-replay-parity.png" width="32%" alt="Foundation energy parity">
+  <img src="analysis_outputs/foundation_workflow/parity/plots/omat-forces-replay-parity.png" width="32%" alt="Foundation forces parity">
+  <img src="analysis_outputs/foundation_workflow/parity/plots/omat-stress-replay-parity.png" width="32%" alt="Foundation stress parity">
+</p>
 
-![Foundation ionic dielectric parity](analysis_outputs/foundation_workflow/hessian/plots/unfiltered_ionic_dielectric_parity.png)
+<p align="center">
+  <img src="analysis_outputs/foundation_workflow/parity/plots/omat-becs-parity.png" width="49%" alt="Foundation BEC parity">
+  <img src="analysis_outputs/foundation_workflow/parity/plots/omat-polarisability-parity.png" width="49%" alt="Foundation polarizability parity">
+</p>
+
+<p align="center">
+  <img src="analysis_outputs/foundation_workflow/parity/plots/omat-eps-inf-parity.png" width="49%" alt="Foundation electronic dielectric parity">
+  <img src="analysis_outputs/foundation_workflow/parity/plots/omat-eps-ionic-parity.png" width="49%" alt="Foundation ionic dielectric parity">
+</p>
+
+### Density plots
+
+<p align="center">
+  <img src="bec_diag_density.png" width="49%" alt="Foundation diagonal BEC density">
+  <img src="bec_offdiag_density.png" width="49%" alt="Foundation off-diagonal BEC density">
+</p>
+
+<p align="center">
+  <img src="eps_inf_diag_density.png" width="49%" alt="Foundation diagonal epsilon infinity density">
+  <img src="eps_inf_offdiag_density.png" width="49%" alt="Foundation off-diagonal epsilon infinity density">
+</p>
 
 ## Main entry points
 

@@ -12,11 +12,25 @@ Important files:
 
 ## Key plots
 
-![SiO2 spectroscopy comparison](plots/sio2_compare.png)
+### Training curve
 
-![SiO2 dielectric relaxation comparison](plots/sio2_dielectric_relax_compare_relaxation.png)
+<p align="center">
+  <img src="results/MACE-field-SiO2_run-23_train_Default_stage_one.png" width="72%" alt="SiO2 training curve">
+</p>
 
-![SiO2 representative snapshots](plots/sio2_representative_snapshots.png)
+### Spectroscopy and dielectric relaxation
+
+<p align="center">
+  <img src="plots/sio2_compare.png" width="49%" alt="SiO2 spectroscopy comparison">
+  <img src="plots/sio2_dielectric_relax_compare_relaxation.png" width="49%" alt="SiO2 dielectric relaxation comparison">
+</p>
+
+### Trajectory diagnostics
+
+<p align="center">
+  <img src="plots/sio2_representative_snapshots.png" width="49%" alt="SiO2 representative snapshots">
+  <img src="plots/sio2_thermo_trace.png" width="49%" alt="SiO2 thermo trace">
+</p>
 
 ## Main entry points
 

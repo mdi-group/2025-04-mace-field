@@ -12,11 +12,22 @@ Important files:
 
 ## Key plots
 
-![BaTiO3 hysteresis comparison](plots/batio3_compare.png)
+### Training curve
 
-![BaTiO3 switching trace](plots/batio3_switching_trace.png)
+<p align="center">
+  <img src="results/MACE-Field-BaTiO3_run-23_train_Default_stage_one.png" width="72%" alt="BaTiO3 training curve">
+</p>
 
-![BaTiO3 snapshots](plots/batio3_hysteresis_snapshots.png)
+### Hysteresis and trajectory diagnostics
+
+<p align="center">
+  <img src="plots/batio3_compare.png" width="49%" alt="BaTiO3 hysteresis comparison">
+  <img src="plots/batio3_switching_trace.png" width="49%" alt="BaTiO3 switching trace">
+</p>
+
+<p align="center">
+  <img src="plots/batio3_hysteresis_snapshots.png" width="72%" alt="BaTiO3 snapshots">
+</p>
 
 ## Main entry points
 

@@ -10,9 +10,17 @@ Important data files:
 
 ## Key plots
 
-Matbench overlap and refractive-index check:
+### Training curve
 
-![Matbench refractive-index parity](MP-Dielectrics-filtered-matbench-refractive-index-parity.png)
+<p align="center">
+  <img src="results/MACE-Field-MP-Dielectrics_run-23_train_Default_stage_one.png" width="72%" alt="MP-Dielectrics training curve">
+</p>
+
+### Matbench overlap and refractive-index check
+
+<p align="center">
+  <img src="MP-Dielectrics-filtered-matbench-refractive-index-parity.png" width="72%" alt="Matbench refractive-index parity">
+</p>
 
 The heavier BEC / polarizability parity plots used by the manuscript are generated through the foundation workflow in [../Foundation/README.md](../Foundation/README.md).
 

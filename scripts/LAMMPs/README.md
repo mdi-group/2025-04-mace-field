@@ -17,13 +17,17 @@ Auxiliary utilities:
 
 ## Key downstream figures generated from these runs
 
-BaTiO3 hysteresis:
+This folder consumes trained checkpoints from the sibling model directories and does not contain its own `results/` training-curve outputs. The main visual artefacts here are the saved MD trajectories and the downstream comparison plots rebuilt from them.
 
-![BaTiO3 hysteresis comparison](../BaTiO3/plots/batio3_compare.png)
+<p align="center">
+  <img src="../BaTiO3/plots/batio3_compare.png" width="49%" alt="BaTiO3 hysteresis comparison">
+  <img src="../SiO2/plots/sio2_compare.png" width="49%" alt="SiO2 spectroscopy comparison">
+</p>
 
-SiO2 spectroscopy:
-
-![SiO2 spectroscopy comparison](../SiO2/plots/sio2_compare.png)
+<p align="center">
+  <img src="../BaTiO3/plots/batio3_switching_trace.png" width="49%" alt="BaTiO3 switching trace">
+  <img src="../SiO2/plots/sio2_thermo_trace.png" width="49%" alt="SiO2 thermo trace">
+</p>
 
 ## Main entry points
 
