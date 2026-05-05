@@ -1,0 +1,3 @@
+label,path,n_frames,Ec_up_MV_cm,Ec_down_MV_cm,Ec_abs_avg_MV_cm,Pr_up_uC_cm2,Pr_down_uC_cm2,Pr_abs_avg_uC_cm2
+omat,/home/brad/repositories/2025-04-mace-field/scripts/LAMMPs/MD/runs/BaTiO3-mp-5986-sc1x1x1-0K-5GHz-hysteresis-2026-05-03_101740/BaTiO3-mp-5986/hysteresis.annotated.extxyz,99951,13.71758955775572,-13.717593557927628,13.717591557841674,-48.48064684714114,48.48010111691305,48.48037398202709
+direct,/home/brad/repositories/2025-04-mace-field/scripts/LAMMPs/MD/runs/BaTiO3-mp-5986-sc1x1x1-0K-5GHz-hysteresis-2026-05-03_101759/BaTiO3-mp-5986/hysteresis.annotated.extxyz,99951,16.490600076291734,-16.490577395019784,16.49058873565576,-54.517915283177146,54.51733656431402,54.517625923745584

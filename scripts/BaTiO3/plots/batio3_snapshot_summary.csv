@@ -1,0 +1,7 @@
+order,label,frame_index,time_ps,electric_field_MV_cm,polarization_uC_cm2,temperature_K,avg_ti_offcenter_z_A,avg_ti_offcenter_mag_A,structure_path
+1,negative_field,50000,100.0,-36.36,-64.71843749271868,2.47573818366896e-09,0.3833331705790143,0.3833331705851717,/home/brad/repositories/2025-04-mace-field/scripts/BaTiO3/plots/structures/01_negative_field.xyz
+2,zero_field,75000,150.0,-6.6792236425496606e-15,-48.486849308806384,0.0011623954011225,0.2670338372456804,0.2670338400806411,/home/brad/repositories/2025-04-mace-field/scripts/BaTiO3/plots/structures/02_zero_field.xyz
+3,pre_switch,81305,162.61,14.030372801854599,-6.429815445134673,5.71602067841725,0.020895380455557624,0.13440196964832754,/home/brad/repositories/2025-04-mace-field/scripts/BaTiO3/plots/structures/03_pre_switch.xyz
+4,switch_mid,81330,162.66,14.0830462231648,15.028440239960956,34.8962841944713,-0.10304475411234432,0.1671217225905257,/home/brad/repositories/2025-04-mace-field/scripts/BaTiO3/plots/structures/04_switch_mid.xyz
+5,switch_end,81355,162.71,14.1356848959583,41.4041674668666,14.2782196467437,-0.2751514960876529,0.29658090768273754,/home/brad/repositories/2025-04-mace-field/scripts/BaTiO3/plots/structures/05_switch_end.xyz
+6,positive_field,100000,200.0,36.36,64.71812115834591,3.43897801207072e-09,-0.3833318294209863,0.3833318294268546,/home/brad/repositories/2025-04-mace-field/scripts/BaTiO3/plots/structures/06_positive_field.xyz
