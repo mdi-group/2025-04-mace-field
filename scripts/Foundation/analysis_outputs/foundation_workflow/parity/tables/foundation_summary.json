@@ -1,0 +1,24 @@
+{
+  "model_path": "/home/brad/repositories/2025-04-mace-field/scripts/Foundation/MACEField-omat-dielectric.model",
+  "head": "pt_head",
+  "device": "cuda",
+  "dtype": "float32",
+  "energy_force_stress_source_dataset": "replay_mh0_omat_pbe",
+  "energy_force_stress_source_path": "/home/brad/repositories/2025-04-mace-field/scripts/Foundation/data/subselected-replay-data-mh-0-omat-pbe.xyz",
+  "prediction_dir": "/home/brad/repositories/2025-04-mace-field/scripts/Foundation/analysis_outputs/foundation_workflow/parity/predictions",
+  "plots_dir": "/home/brad/repositories/2025-04-mace-field/scripts/Foundation/analysis_outputs/foundation_workflow/parity/plots",
+  "tables_dir": "/home/brad/repositories/2025-04-mace-field/scripts/Foundation/analysis_outputs/foundation_workflow/parity/tables",
+  "skipped_unsupported_structures_csv": "/home/brad/repositories/2025-04-mace-field/scripts/Foundation/analysis_outputs/foundation_workflow/parity/tables/skipped_unsupported_structures.csv",
+  "skipped_unsupported_structure_count": 226,
+  "bec_asr_top_ref_material": {
+    "frame_index": 1328,
+    "material_id": "mp-768223",
+    "formula": "Ce4Cs8O12",
+    "n_atoms": 24,
+    "ref_bec_asr_max_abs": 205.38017999999997,
+    "pred_bec_asr_max_abs": 8.999999971948114e-07
+  },
+  "bec_diag_outlier_count": 73857,
+  "bec_offdiag_outlier_count": 147714,
+  "bec_error_summary_rows": 156
+}
