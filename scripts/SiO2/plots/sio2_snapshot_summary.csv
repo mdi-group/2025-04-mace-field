@@ -1,0 +1,7 @@
+order,label,frame_index,time_ps,temperature_K,total_energy_eV,pressure_bar,polarization_norm_e_A2,structure_path
+1,frame_1,0,0.0,284.260569837489,-563.157183970099,1978.43708028391,0.0011220791380283364,/home/brad/repositories/2025-04-mace-field/scripts/SiO2/plots/structures/01_frame_1.xyz
+2,frame_2,20000,40.0,278.61604366882,-563.222481409756,19420.5232188787,0.000862975526235162,/home/brad/repositories/2025-04-mace-field/scripts/SiO2/plots/structures/02_frame_2.xyz
+3,frame_3,40000,80.0,322.618223942416,-563.02012832765,9825.96212298919,0.001019275704367568,/home/brad/repositories/2025-04-mace-field/scripts/SiO2/plots/structures/03_frame_3.xyz
+4,frame_4,60000,120.0,351.892639998742,-562.705076525139,6192.02128424733,0.0011364253499259653,/home/brad/repositories/2025-04-mace-field/scripts/SiO2/plots/structures/04_frame_4.xyz
+5,frame_5,80000,160.0,230.767708057054,-563.253488410001,11671.2046038759,0.0007655810293558375,/home/brad/repositories/2025-04-mace-field/scripts/SiO2/plots/structures/05_frame_5.xyz
+6,frame_6,100000,200.0,228.567720252934,-563.667850924342,20617.6444832091,0.002044551560380726,/home/brad/repositories/2025-04-mace-field/scripts/SiO2/plots/structures/06_frame_6.xyz

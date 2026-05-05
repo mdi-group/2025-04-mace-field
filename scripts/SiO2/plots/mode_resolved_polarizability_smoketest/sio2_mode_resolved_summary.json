@@ -1,0 +1,100 @@
+{
+  "analysis_parameters": {
+    "device": "cuda",
+    "dtype": "float32",
+    "delta_q_sqrt_amu_A": 0.1,
+    "spectrum_sigma_cm-1": 20.0,
+    "max_frequency_cm-1": 1400.0,
+    "max_optical_modes": 2
+  },
+  "structure_difference": {
+    "rms_cartesian_difference_A": 0.0689536164000168,
+    "max_abs_cartesian_difference_A": 0.11089975000000007
+  },
+  "direct_native": {
+    "label": "direct",
+    "model_path": "/home/brad/repositories/2025-04-mace-field/scripts/SiO2/MACE-field-SiO2.model",
+    "energy_head": "Default",
+    "response_head": "Default",
+    "structure_path": "/home/brad/repositories/2025-04-mace-field/scripts/LAMMPs/MD/runs/SiO2-mp-7000-sc1x1x1-dielectric-relax-2026-05-04_153404/SiO2-mp-7000/relaxed_zero.annotated.extxyz",
+    "natoms": 72,
+    "n_modes_total": 216,
+    "n_optical_modes_reported": 2,
+    "n_negative_optical_modes": 1,
+    "acoustic_mode_indices": [
+      2,
+      1,
+      3
+    ],
+    "min_optical_frequency_cm-1": -22.166049331669967,
+    "max_optical_frequency_cm-1": 39.536894009624916,
+    "mean_positive_optical_frequency_cm-1": 39.536894009624916,
+    "total_raman_activity": 1.2320808812272024e-05
+  },
+  "foundation_native": {
+    "label": "foundation",
+    "model_path": "/home/brad/repositories/2025-04-mace-field/scripts/Foundation/MACEField-omat-dielectric.model",
+    "energy_head": "pt_head",
+    "response_head": "mp-dielectric",
+    "structure_path": "/home/brad/repositories/2025-04-mace-field/scripts/LAMMPs/MD/runs/SiO2-mp-7000-sc1x1x1-dielectric-relax-2026-05-04_153401/SiO2-mp-7000/relaxed_zero.annotated.extxyz",
+    "natoms": 72,
+    "n_modes_total": 216,
+    "n_optical_modes_reported": 2,
+    "n_negative_optical_modes": 1,
+    "acoustic_mode_indices": [
+      1,
+      2,
+      3
+    ],
+    "min_optical_frequency_cm-1": -17.97745737203415,
+    "max_optical_frequency_cm-1": 46.31697409933474,
+    "mean_positive_optical_frequency_cm-1": 46.31697409933474,
+    "total_raman_activity": 1.1824932657032177e-06
+  },
+  "common_basis": {
+    "basis": "direct_native_modes",
+    "structure_path": "/home/brad/repositories/2025-04-mace-field/scripts/LAMMPs/MD/runs/SiO2-mp-7000-sc1x1x1-dielectric-relax-2026-05-04_153404/SiO2-mp-7000/relaxed_zero.annotated.extxyz",
+    "n_modes": 2,
+    "raman_activity_correlation": -1.0,
+    "frobenius_norm_correlation": -0.9999999999999998,
+    "total_direct_raman_activity": 3.851333825980119e-05,
+    "total_foundation_raman_activity": 3.1187652783884084e-06,
+    "total_activity_ratio_foundation_over_direct": 0.08097883536737353,
+    "mean_foundation_over_direct_frequency_weighted_activity_ratio": 0.1633981662472908,
+    "most_suppressed_strong_modes": [
+      {
+        "mode_index": 0,
+        "frequency_cm-1": -22.166049331669967,
+        "direct_raman_activity": 2.6200665269038954e-05,
+        "foundation_raman_activity": 1.1068970900953134e-06,
+        "activity_ratio_foundation_over_direct": 0.04224690780670069,
+        "direct_frobenius_norm": 0.0015333630093867937,
+        "foundation_frobenius_norm": 0.0003246762379479149,
+        "frobenius_ratio_foundation_over_direct": 0.21174127454512937,
+        "direct_iso_derivative": -0.00033477942148844403,
+        "foundation_iso_derivative": -1.7881393432617188e-06,
+        "direct_anisotropy_sq": 3.0224555030989685e-06,
+        "foundation_anisotropy_sq": 1.5810760074161743e-07
+      }
+    ]
+  },
+  "native_matching": {
+    "n_matches": 2,
+    "mean_overlap_abs": 0.9885310791013137,
+    "median_overlap_abs": 0.9885310791013137,
+    "mean_frequency_ratio_foundation_over_direct": 0.9912615625995469,
+    "raman_activity_correlation": 1.0
+  },
+  "paths": {
+    "direct_native_csv": "/home/brad/repositories/2025-04-mace-field/scripts/SiO2/plots/mode_resolved_polarizability_smoketest/sio2_mode_resolved_direct_native.csv",
+    "foundation_native_csv": "/home/brad/repositories/2025-04-mace-field/scripts/SiO2/plots/mode_resolved_polarizability_smoketest/sio2_mode_resolved_foundation_native.csv",
+    "common_basis_direct_csv": "/home/brad/repositories/2025-04-mace-field/scripts/SiO2/plots/mode_resolved_polarizability_smoketest/sio2_mode_resolved_direct_common_basis.csv",
+    "common_basis_foundation_csv": "/home/brad/repositories/2025-04-mace-field/scripts/SiO2/plots/mode_resolved_polarizability_smoketest/sio2_mode_resolved_foundation_common_basis.csv",
+    "common_basis_paired_csv": "/home/brad/repositories/2025-04-mace-field/scripts/SiO2/plots/mode_resolved_polarizability_smoketest/sio2_mode_resolved_common_basis_pairs.csv",
+    "native_matches_csv": "/home/brad/repositories/2025-04-mace-field/scripts/SiO2/plots/mode_resolved_polarizability_smoketest/sio2_mode_resolved_native_matches.csv",
+    "native_overlap_npz": "/home/brad/repositories/2025-04-mace-field/scripts/SiO2/plots/mode_resolved_polarizability_smoketest/sio2_mode_resolved_native_overlap.npz",
+    "raman_spectra_plot": "/home/brad/repositories/2025-04-mace-field/scripts/SiO2/plots/mode_resolved_polarizability_smoketest/sio2_mode_resolved_raman_spectra.png",
+    "common_basis_activity_parity_plot": "/home/brad/repositories/2025-04-mace-field/scripts/SiO2/plots/mode_resolved_polarizability_smoketest/sio2_mode_resolved_common_basis_activity_parity.png",
+    "native_frequency_parity_plot": "/home/brad/repositories/2025-04-mace-field/scripts/SiO2/plots/mode_resolved_polarizability_smoketest/sio2_mode_resolved_native_frequency_parity.png"
+  }
+}

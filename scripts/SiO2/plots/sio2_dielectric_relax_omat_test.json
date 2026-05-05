@@ -1,0 +1,32 @@
+{
+  "polar_axis": "z",
+  "eps0_const_e_per_VA": 0.005526349406,
+  "polarization_response_sign": -1.0,
+  "note": "eps_inf is derived from I + MACE_polarizability at zero field. eps_0 is derived from sign-corrected delta polarization using the available directional relaxations.",
+  "runs": [
+    {
+      "label": "omat",
+      "run_dir": "/home/brad/repositories/2025-04-mace-field/scripts/LAMMPs/MD/runs/SiO2-mp-7000-sc1x1x1-dielectric-relax-2026-05-04_152310/SiO2-mp-7000",
+      "model_name": "MACEField-omat-dielectric.model",
+      "head": "pt_head",
+      "available_field_axes": "x y z",
+      "eps_inf_x": 2.572875738143921,
+      "eps_inf_y": 2.5782262086868286,
+      "eps_inf_z": 2.643775224685669,
+      "eps_inf_parallel": 2.643775224685669,
+      "eps_inf_perpendicular": 2.5755509734153748,
+      "eps_0_x": 3.5238787536878475,
+      "eps_0_y": 1.8871244361865402,
+      "eps_0_z": 2.381717588206569,
+      "eps_0_parallel": 2.381717588206569,
+      "eps_0_perpendicular": 2.7055015949371937,
+      "P0_x_uC_cm2": 0.4972482574180645,
+      "P0_y_uC_cm2": -0.0330982002983022,
+      "P0_z_uC_cm2": 0.05688952417104851,
+      "deltaP_x_uC_cm2": 0.8125331638576314,
+      "deltaP_y_uC_cm2": 0.28559930773886044,
+      "deltaP_z_uC_cm2": 0.44482777227818976,
+      "static_note": ""
+    }
+  ]
+}
