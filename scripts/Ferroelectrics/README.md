@@ -21,6 +21,8 @@ OMAT-based foundation comparison:
 
 Spontaneous polarisation:
 
+![Direct spontaneous polarisation parity](analysis_outputs/polarization_branches/MACE-Field-MP-Ferroelectrics_spontaneous_polarization_raw_splits.png)
+
 ![Foundation spontaneous polarisation parity](analysis_outputs/polarization_branches/MACEField-omat-dielectric_spontaneous_polarization_folded_splits.png)
 
 ## Main entry points
