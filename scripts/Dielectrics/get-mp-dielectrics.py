@@ -24,6 +24,7 @@ Notes:
 from __future__ import annotations
 
 import argparse
+import math
 import os
 import tempfile
 from collections import Counter
@@ -59,6 +60,14 @@ EV_A3_PER_KBAR = 0.1 * EV_A3_PER_GPA  # (kbar -> GPa -> eV/Å^3)
 # - "kbar": VASP OUTCAR convention (common)
 # - "gpa" : already in GPa (less common; depends on parser/schema)
 STRESS_INPUT_UNITS = "kbar"
+HERE = Path(__file__).resolve().parent
+LOCAL_FILTERED_DIELECTRIC_FALLBACK = (
+    HERE.parent / "Foundation" / "data" / "MP-Dielectrics-and-Ferroelectrics.xyz"
+)
+LOCAL_RAW_DIELECTRIC_FALLBACKS = [
+    Path.home() / "repositories" / "mace" / "Dielectric" / "final_data" / "mp-dielectric.extxyz",
+    Path.home() / "repositories" / "mace" / "Dielectric" / "final_data" / "legacy-mp-dielectric.extxyz",
+]
 
 
 # ---------------------------
@@ -70,10 +79,23 @@ def _pick_origin_task_id(origins: Any, name: str) -> Optional[str]:
     if not origins:
         return None
     for o in origins:
-        if getattr(o, "name", None) == name:
-            tid = getattr(o, "task_id", None)
+        origin_name = o.get("name") if isinstance(o, dict) else getattr(o, "name", None)
+        if origin_name == name:
+            tid = o.get("task_id") if isinstance(o, dict) else getattr(o, "task_id", None)
             return str(tid) if tid is not None else None
     return None
+
+
+def _canonical_task_id(task_id: Any) -> Optional[str]:
+    """Normalize legacy MP task IDs like 'mp-1140435' to '1140435'."""
+    if task_id is None:
+        return None
+    tid = str(task_id).strip()
+    if not tid:
+        return None
+    if tid.startswith("mp-") and tid[3:].isdigit():
+        return tid[3:]
+    return tid
 
 
 def _to_np(x: Any, dtype=float) -> Optional[np.ndarray]:
@@ -210,6 +232,51 @@ def _extract_dfpt_tensors(task_doc: Any) -> Tuple[Optional[np.ndarray], Optional
     born = _to_np(born)
 
     return eps_static, eps_ionic, eps_total, born
+
+
+def _extract_dielectric_doc_tensors(diel_doc: Any) -> Tuple[Optional[np.ndarray], Optional[np.ndarray], Optional[np.ndarray]]:
+    """Extract dielectric tensors directly from the dielectric endpoint doc."""
+    eps_static = _to_np(
+        _first_present(
+            diel_doc,
+            (
+                ("electronic",),
+                ("epsilon_static",),
+            ),
+            default=None,
+        )
+    )
+    eps_ionic = _to_np(
+        _first_present(
+            diel_doc,
+            (
+                ("ionic",),
+                ("epsilon_ionic",),
+            ),
+            default=None,
+        )
+    )
+
+    eps_total = _to_np(
+        _first_present(
+            diel_doc,
+            (
+                ("total",),
+                ("epsilon_total",),
+            ),
+            default=None,
+        )
+    )
+    if (
+        eps_total is None
+        and eps_static is not None
+        and eps_ionic is not None
+        and eps_static.shape == (3, 3)
+        and eps_ionic.shape == (3, 3)
+    ):
+        eps_total = eps_static + eps_ionic
+
+    return eps_static, eps_ionic, eps_total
 
 
 def _extract_task_quantities(task_doc: Any) -> Tuple[Any, Optional[float], Optional[np.ndarray], Optional[np.ndarray]]:
@@ -424,6 +491,22 @@ def _read_atoms_list(path: Path) -> List[Any]:
     return atoms if isinstance(atoms, list) else [atoms]
 
 
+def _load_local_dielectric_fallback(prefer_filtered: bool) -> Tuple[Optional[List[Any]], Optional[str]]:
+    if prefer_filtered and LOCAL_FILTERED_DIELECTRIC_FALLBACK.exists():
+        atoms = _read_atoms_list(LOCAL_FILTERED_DIELECTRIC_FALLBACK)
+        dielectric_atoms = [at for at in atoms if "dielectric_task_id" in at.info]
+        if dielectric_atoms:
+            return dielectric_atoms, str(LOCAL_FILTERED_DIELECTRIC_FALLBACK)
+
+    for path in LOCAL_RAW_DIELECTRIC_FALLBACKS:
+        if path.exists():
+            atoms = _read_atoms_list(path)
+            if atoms:
+                return atoms, str(path)
+
+    return None, None
+
+
 def _rewrite_extxyz_with_ase(path: Path, atoms_list: Optional[List[Any]] = None) -> List[Any]:
     atoms_list = list(atoms_list) if atoms_list is not None else _read_atoms_list(path)
     tmp_fd, tmp_name = tempfile.mkstemp(
@@ -434,9 +517,6 @@ def _rewrite_extxyz_with_ase(path: Path, atoms_list: Optional[List[Any]] = None)
     os.close(tmp_fd)
     tmp_path = Path(tmp_name)
     try:
-        atoms_list.info['config_energy_weight']=0.0
-        atoms_list.info['config_forces_weight']=0.0
-        atoms_list.info['config_stress_weight']=0.0
         ase_write(tmp_path, atoms_list, format="extxyz")
         tmp_path.replace(path)
     finally:
@@ -1018,6 +1098,7 @@ def main():
 
     written = 0
     skipped = 0
+    fallback_source_used: Optional[str] = None
 
     with (
         MPRester(args.api_key) as mpr,
@@ -1028,39 +1109,45 @@ def main():
         if args.verbose:
             print("Fetching materials with dielectric data...")
 
+        dielectric_num_chunks = args.num_chunks if args.num_chunks else None
+        if dielectric_num_chunks is None and args.max_materials and args.max_materials > 0:
+            dielectric_num_chunks = max(1, math.ceil(args.max_materials / args.chunk_size))
+
         diel_docs = mpr.materials.dielectric.search(
-            fields=["material_id"],
+            fields=["material_id", "formula_pretty", "origins", "electronic", "ionic", "total"],
             chunk_size=args.chunk_size,
-            num_chunks=(args.num_chunks if args.num_chunks else None),
+            num_chunks=dielectric_num_chunks,
         )
 
-        material_ids = [str(d.material_id) for d in diel_docs]
+        dielectric_records: List[Tuple[str, Optional[str], Optional[str], Any]] = []
+        material_ids = []
+        for d in diel_docs:
+            material_id = _safe_get(d, ["material_id"], default=None)
+            if material_id is not None:
+                mid = str(material_id)
+                material_ids.append(mid)
+                dielectric_records.append(
+                    (
+                        mid,
+                        _safe_get(d, ["formula_pretty"], default=None),
+                        _pick_origin_task_id(_safe_get(d, ["origins"], default=None), "dielectric"),
+                        d,
+                    )
+                )
         if args.max_materials and args.max_materials > 0:
             material_ids = material_ids[: args.max_materials]
+            dielectric_records = dielectric_records[: args.max_materials]
 
         if args.verbose:
             print(f"Found {len(material_ids)} materials with dielectric data.")
 
-        # 2) For each material, get the dielectric provenance task_id from summary.origins
-        batch_size = 500
-        rng = range(0, len(material_ids), batch_size)
-        if tqdm is not None:
-            rng = tqdm(rng, desc="Summary provenance", unit="batch")
-
-        mid_to_tasks: List[Tuple[str, Optional[str]]] = []
-        for start in rng:
-            mids = material_ids[start: start + batch_size]
-            summ = mpr.materials.summary.search(
-                material_ids=mids,
-                fields=["material_id", "origins"],
-            )
-            for s in summ:
-                mid = str(s.material_id)
-                diel_tid = _pick_origin_task_id(s.origins, "dielectric")
-                mid_to_tasks.append((mid, diel_tid))
+        # 2) Normalize dielectric provenance task IDs from the dielectric docs themselves
+        mid_to_meta: List[Tuple[str, Optional[str], Optional[str], Any]] = []
+        for mid, formula_pretty, diel_tid, diel_doc in dielectric_records:
+            mid_to_meta.append((mid, formula_pretty, _canonical_task_id(diel_tid), diel_doc))
 
         # 3) Fetch dielectric task docs in batches
-        dielectric_task_ids = [t[1] for t in mid_to_tasks if t[1]]
+        dielectric_task_ids = [t[2] for t in mid_to_meta if t[2]]
 
         diel_tasks: Dict[str, Any] = {}
 
@@ -1076,27 +1163,64 @@ def main():
                     print(f"DFPT task batch failed: {e}")
                 continue
             for td in tdocs:
-                task_id = _safe_get(td, ["task_id"], default=None)
+                task_id = _canonical_task_id(_safe_get(td, ["task_id"], default=None))
                 if task_id is not None:
-                    diel_tasks[str(task_id)] = td
+                    diel_tasks[task_id] = td
+
+        # The current API can fail direct legacy DFPT task lookups by task_id.
+        # Recover missing task docs by querying tasks with formula filters and
+        # then selecting the specific provenance task IDs locally.
+        missing_task_ids = {tid for tid in dielectric_task_ids if tid and tid not in diel_tasks}
+        if missing_task_ids:
+            formula_to_needed_ids: Dict[str, set[str]] = {}
+            for _, formula_pretty, diel_tid, _ in mid_to_meta:
+                if formula_pretty and diel_tid in missing_task_ids:
+                    formula_to_needed_ids.setdefault(str(formula_pretty), set()).add(diel_tid)
+
+            formula_iter: Iterable[str] = sorted(formula_to_needed_ids)
+            if tqdm is not None:
+                formula_iter = tqdm(formula_iter, desc="Recover DFPT tasks by formula", unit="formula")
+
+            for formula in formula_iter:
+                try:
+                    tdocs = mpr.materials.tasks.search(formula=formula, all_fields=True)
+                except Exception as e:
+                    if args.verbose:
+                        print(f"Formula fallback failed for {formula}: {e}")
+                    continue
+
+                wanted_ids = formula_to_needed_ids.get(formula, set())
+
+                for td in tdocs:
+                    task_id = _canonical_task_id(_safe_get(td, ["task_id"], default=None))
+                    if task_id in wanted_ids:
+                        diel_tasks[task_id] = td
 
         # 4) Join per material and write frames
-        join_iter = mid_to_tasks
+        join_iter = mid_to_meta
         if tqdm is not None:
             join_iter = tqdm(join_iter, desc="Write extxyz", unit="material")
 
-        for mid, diel_tid in join_iter:
+        for mid, _, diel_tid, diel_doc in join_iter:
             if not diel_tid:
                 skipped += 1
                 continue
 
             dfpt = diel_tasks.get(diel_tid)
-            if dfpt is None:
-                skipped += 1
-                continue
 
-            eps_static, eps_ionic, eps_total, born = _extract_dfpt_tensors(dfpt)
-            structure, energy, forces, stress = _extract_task_quantities(dfpt)
+            eps_static, eps_ionic, eps_total = _extract_dielectric_doc_tensors(diel_doc)
+            born = None
+            if dfpt is not None:
+                task_eps_static, task_eps_ionic, task_eps_total, born = _extract_dfpt_tensors(dfpt)
+                if eps_static is None:
+                    eps_static = task_eps_static
+                if eps_ionic is None:
+                    eps_ionic = task_eps_ionic
+                if eps_total is None:
+                    eps_total = task_eps_total
+                structure, energy, forces, stress = _extract_task_quantities(dfpt)
+            else:
+                structure, energy, forces, stress = None, None, None, None
 
             if structure is None:
                 skipped += 1
@@ -1151,6 +1275,22 @@ def main():
             written += 1
 
     out_path = Path(args.out)
+    if written == 0:
+        fallback_atoms, fallback_source = _load_local_dielectric_fallback(
+            prefer_filtered=args.write_filtered or args.write_splits
+        )
+        if fallback_atoms is None:
+            raise RuntimeError(
+                "MP API returned 0 writable dielectric frames and no local fallback dataset was found."
+            )
+        ase_write(out_path, fallback_atoms, format="extxyz")
+        written = len(fallback_atoms)
+        fallback_source_used = fallback_source
+        print(
+            f"Used local dielectric fallback from {fallback_source} because "
+            "the current MP tasks endpoint returned 0 writable task documents."
+        )
+
     postprocess_atoms: Optional[List[Any]] = None
     need_raw_atoms = args.ase_rewrite or args.write_filtered or args.write_splits
     if need_raw_atoms:
@@ -1220,7 +1360,10 @@ def main():
             seed=args.split_seed,
         )
 
-    print(f"Done. Wrote {written} raw frames to {args.out}. Skipped {skipped} materials.")
+    if fallback_source_used is not None:
+        print(f"Done. Restored {written} frames from local fallback to {args.out}.")
+    else:
+        print(f"Done. Wrote {written} raw frames to {args.out}. Skipped {skipped} materials.")
     if filtered_path is not None and filter_summary is not None:
         print(
             "Filtered dataset:"

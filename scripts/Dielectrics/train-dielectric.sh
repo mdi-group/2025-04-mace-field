@@ -1,5 +1,5 @@
 
-torchrun --standalone --nproc_per_node="gpu" ../../../mace/mace-field/mace/cli/run_train.py \
+torchrun --standalone --nproc_per_node="gpu" -m mace.cli.run_train \
     --name="MACE-Field-MP-Dielectrics" \
     --train_file="MP-Dielectrics-filtered-train.xyz" \
     --valid_file="MP-Dielectrics-filtered-valid.xyz" \
@@ -7,7 +7,7 @@ torchrun --standalone --nproc_per_node="gpu" ../../../mace/mace-field/mace/cli/r
     --E0s="average" \
     --loss='universal_field' \
     --energy_weight=1.0 \
-    --forces_weight=100.0 \
+    --forces_weight=10.0 \
     --stress_weight=1.0 \
     --polarization_weight=0.0 \
     --becs_weight=100.0 \
@@ -20,21 +20,19 @@ torchrun --standalone --nproc_per_node="gpu" ../../../mace/mace-field/mace/cli/r
     --model="MACEField" \
     --num_channels=128 \
     --num_workers=8 \
-    --lr=0.005 \
-    --swa \
+    --lr=0.01 \
     --ema \
     --ema_decay=0.995 \
-    --scheduler_patience=10 \
-    --max_num_epochs=1000 \
+    --max_num_epochs=300 \
     --patience 100 \
     --amsgrad \
     --distributed \
     --device="cuda" \
     --enable_cueq True \
     --seed=23 \
-    --default_dtype="float64" \
+    --default_dtype="float32" \
     --save_cpu \
-    --batch_size 4 \
-    --valid_batch_size 4 \
+    --batch_size 2 \
+    --valid_batch_size 2 \
     --restart_latest \
     --plot=True \
