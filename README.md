@@ -165,7 +165,7 @@ The paper uses figure copies in `figures/`, but the source analyses live in the 
 
 ## Key figures
 
-### OMAT-based field-aware foundation model
+### OMAT-based field-aware foundation model: `MACE-Field-MH-0`
 
 <p align="center">
   <img src="figures/omat-replay-parities.png" width="49%" alt="Foundation replay parity">
