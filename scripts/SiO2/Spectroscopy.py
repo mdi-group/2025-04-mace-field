@@ -1257,7 +1257,21 @@ def plot_comparison(
         target = float(np.nanmax(current_finite)) if current_finite.size else 1.0
         if normalize_intensity:
             target = 1.0
-        exp_freq, exp_plot = normalize_experimental_curve(exp_freq, exp_intensity, freq_min, freq_max, target_max=target)
+
+        # Process the experimental Raman curve with the same frequency-grid and
+        # Gaussian broadening convention used for the plotted comparison spectra.
+        # This keeps the upper-right Raman comparison consistent with the
+        # mode-resolved Raman subplot. If --no-smear is used, sigma is set to
+        # zero so the helper only baseline-corrects, interpolates, and normalizes.
+        exp_freq, exp_plot = prepare_experimental_mode_resolved_curve(
+            exp_freq,
+            exp_intensity,
+            freq_min=freq_min,
+            freq_max=freq_max,
+            sigma_cm=gaussian_broadening_cm if do_smear else 0.0,
+            target_max=target,
+            n_grid=len(curves[0].ω) if curves else 4000,
+        )
         ax_raman.plot(
             exp_freq,
             exp_plot,
@@ -1267,9 +1281,7 @@ def plot_comparison(
             label="Exp. Raman",
             zorder=60,
         )
-        exp_window = (exp_freq >= freq_min) & (exp_freq <= freq_max)
-        if np.any(exp_window):
-            all_raman.append(exp_plot[exp_window])
+        all_raman.append(exp_plot)
 
     if quartz_ref is not None:
         ref_ir_sticks = np.asarray(quartz_ref["ir_intensity"], dtype=np.float64)
