@@ -1,4 +1,4 @@
-# MACE-Field paper repository
+# MACE-Field: General Learning of the Electric Response of Inorganic Materials
 
 This repository contains the manuscript source, analysis scripts, figure exports, compact summaries, and lightweight reproducibility scaffolding for the paper
 
