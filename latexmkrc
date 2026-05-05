@@ -1,1 +1,0 @@
-#$pdflatex = "latexdiff mace-field-arxiv-v2.tex mace-field.tex > mace-field-diff.tex; pdflatex %O  mace-field-diff"
