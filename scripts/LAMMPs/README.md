@@ -2,6 +2,8 @@
 
 This folder contains the production finite-field molecular-dynamics launchers, ML-IAP model-export helpers, live/post hoc response logging tools, and saved run directories used for the BaTiO3 and SiO2 case studies in the paper.
 
+The heavy saved trajectories, run directories, and exported `ML-IAP` models for this workflow are distributed in the release asset `LAMMPs.zip`; see [../../GITHUB_RELEASE.md](../../GITHUB_RELEASE.md). Extract that archive into `scripts/LAMMPs/` before trying to rerun the paper post-processing against the original MD outputs.
+
 The main launchers are:
 
 - `run_batio3_hysteresis.sh`
@@ -107,5 +109,6 @@ The notebook supports LAMMPS trajectory browsing and was added specifically to i
 ## Notes
 
 - These shell workflows handle both the LAMMPS stage and the response backfilling / annotation stage needed for `P`, `Z*`, and polarizability because current `LAMMPS` `ML-IAP` usage only evaluates energies and forces during the MD loop itself.
+- In a lightweight checkout, the large saved run directories and exported ML-IAP models are expected to come from the release asset rather than Git history.
 - The scripts assume the `macefield-lammps.sif` container and the author’s `MACEField` conda environment are available.
 - The `models/` folder contains both the plain `.model` checkpoints and the exported `-mliap_lammps.pt` artefacts used by LAMMPS.

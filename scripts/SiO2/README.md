@@ -2,6 +2,8 @@
 
 This folder contains the single-material alpha-quartz direct model, spectroscopy analysis, dielectric-relaxation analysis, and the mode-resolved Raman diagnostics used to interpret the foundation-model limitations.
 
+Heavy artefacts for this workflow are distributed in the release assets `MACE-field-SiO2.zip` and `LAMMPs.zip`; see [../../GITHUB_RELEASE.md](../../GITHUB_RELEASE.md). Extract them into `scripts/SiO2/` and `scripts/LAMMPs/` for the original direct checkpoint, training logs, production trajectories, and dielectric-relaxation runs.
+
 Important files:
 
 - `SiO2-preprocessed.xyz`: direct-training dataset.
@@ -112,5 +114,6 @@ This writes:
 ## Notes
 
 - The direct quartz model uses the `Default` head; the foundation comparison uses the OMAT-based multihead checkpoint.
+- In a lightweight checkout, the large direct-model artefacts and saved MLMD trajectories are expected to come from the release assets above.
 - The mode-resolved Raman workflow is the main diagnostic behind the paper’s discussion of the remaining foundation-model Raman limitation.
 - Final manuscript figure copies are stored in `../../figures/`.

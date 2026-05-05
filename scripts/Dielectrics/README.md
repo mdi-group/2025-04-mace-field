@@ -2,6 +2,8 @@
 
 This folder contains the Materials Project dielectric dataset assembly, filtering, splitting, direct dielectric-model training, and Matbench overlap / refractive-index analysis.
 
+Heavy artefacts for this workflow are distributed in the release assets `MACE-Field-MP-Dielectric.zip` and `MACE-Field-MP-Dielectrics.zip`; see [../../GITHUB_RELEASE.md](../../GITHUB_RELEASE.md). Extract them into `scripts/Dielectrics/` for the original processed dataset bundle, training logs, and direct dielectric checkpoint.
+
 Important data files:
 
 - `MP-Dielectrics.extxyz`: raw assembled dataset.
@@ -9,6 +11,12 @@ Important data files:
 - `MP-Dielectrics-filtered-{train,valid,test}.xyz`: committed splits used by the training and foundation workflows.
 
 ## Key plots
+
+### Training curve
+
+<p align="center">
+  <img src="results/MACE-Field-MP-Dielectrics_run-23_train_Default_stage_one.png" width="72%" alt="MP-Dielectrics training curve">
+</p>
 
 ### Matbench overlap and refractive-index check
 
@@ -80,5 +88,6 @@ Outputs:
 ## Notes
 
 - The final manuscript uses the filtered dataset and filtered splits committed here.
+- In the lightweight repository, the full processed dataset bundle and direct dielectric training artefacts are expected to be restored from the release assets above.
 - The foundation-model paper figures use these splits through the scripts in `../Foundation/`.
 - The raw `matbench_dielectric.json.gz` cache is kept here so the overlap analysis can be rerun offline once downloaded.

@@ -2,6 +2,8 @@
 
 This folder contains the OMAT-based multihead `MACEField` foundation-model workflow used for the cross-chemistry dielectric and ferroelectric results in the paper.
 
+Heavy artefacts for this workflow are distributed in the release asset `MACEField-omat-pbe-mh-0.zip`; see [../../GITHUB_RELEASE.md](../../GITHUB_RELEASE.md). Extract that archive into `scripts/Foundation/` if you want the original checkpoint, full logs, and replay subset used in the paper.
+
 The main local checkpoint is:
 
 - `MACEField-omat-dielectric.model`
@@ -129,5 +131,6 @@ In practice, `run_foundation_workflow.py` is the preferred wrapper because it al
 ## Notes
 
 - The local model is the OMAT-based field-aware foundation used in the final manuscript.
+- In a lightweight clone of the repository, the large checkpoint and training-log files are expected to come from the release asset rather than Git history.
 - Several scripts refer to the replay/foundation inference head as `pt_head`; this is the head name expected by the local analysis scripts.
 - Final manuscript figure copies are stored in `../../figures/`, but the source outputs live in this folder.

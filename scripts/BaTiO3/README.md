@@ -2,6 +2,8 @@
 
 This folder contains the single-material BaTiO3 direct model, the training artefacts for that model, and the post-processing used to compare the direct hysteresis loop against the OMAT-based foundation loop.
 
+Heavy artefacts for this workflow are distributed in the release assets `MACE-Field-BaTiO3.zip` and `LAMMPs.zip`; see [../../GITHUB_RELEASE.md](../../GITHUB_RELEASE.md). Extract them into `scripts/BaTiO3/` and `scripts/LAMMPs/` for the original direct checkpoint, training logs, and saved hysteresis trajectories.
+
 Important files:
 
 - `BaTiO3-preprocessed.xyz`: direct-training dataset.
@@ -97,5 +99,6 @@ This writes:
 ## Notes
 
 - The direct specialist is the `Default`-head BaTiO3 model committed in this folder.
+- In a lightweight checkout, the large direct-model artefacts and saved MD trajectories are expected to come from the release assets above.
 - The hysteresis comparison plot is built from the annotated `extxyz` trajectories produced by the `LAMMPs` workflows, not from the training set directly.
 - The manuscript copies of the BaTiO3 figures are stored in `../../figures/`.
