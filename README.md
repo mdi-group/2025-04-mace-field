@@ -112,7 +112,7 @@ python get-mp-dielectrics.py \
 MP-Ferroelectric:
 
 ```bash
-cd ~/repositories/2025-04-mace-field/scripts/Ferroelectrics
+cd scripts/Ferroelectrics
 python get_ferroelectric_dataset.py \
   --api-key "$MP_API_KEY" \
   --out MP-Ferroelectrics.xyz \
