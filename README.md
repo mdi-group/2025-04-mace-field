@@ -75,8 +75,8 @@ python polarization_branches.py
 ```bash
 cd scripts/BaTiO3
 python plot_hysteresis.py \
-  --curve OMAT ../LAMMPs/MD/runs/BaTiO3-mp-5986-sc1x1x1-0K-5GHz-hysteresis-2026-05-03_101740/BaTiO3-mp-5986/hysteresis.annotated.extxyz \
-  --curve Direct ../LAMMPs/MD/runs/BaTiO3-mp-5986-sc1x1x1-0K-5GHz-hysteresis-2026-05-03_101759/BaTiO3-mp-5986/hysteresis.annotated.extxyz \
+  --curve OMAT batio3-omat-hysteresis.extxyz \
+  --curve Direct batio3-direct-hysteresis.extxyz \
   --output-prefix plots/batio3_compare
 ```
 
@@ -84,8 +84,8 @@ python plot_hysteresis.py \
 cd scripts/SiO2
 python mode_resolved_polarizability_derivatives.py --output-dir plots
 python Spectroscopy.py \
-  --curve OMAT ../LAMMPs/MD/runs/SiO2-mp-7000-sc1x1x1-300K-200ps-2026-05-03_101733/SiO2-mp-7000/production.annotated.extxyz \
-  --curve Direct ../LAMMPs/MD/runs/SiO2-mp-7000-sc1x1x1-300K-200ps-2026-05-03_101749/SiO2-mp-7000/production.annotated.extxyz \
+  --curve OMAT sio2-omat-spectroscopy.extxyz \
+  --curve Direct sio2-direct-spectroscopy.extxyz \
   --mode-resolved-dir plots \
   --output-prefix plots/sio2_compare \
   --save-plots --no-show
