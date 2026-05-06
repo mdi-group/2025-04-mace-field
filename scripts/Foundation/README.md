@@ -20,9 +20,9 @@ The committed training and analysis outputs include:
 ### Training curves
 
 <p align="center">
-  <img src="results/MACEField-omat-dielectric_run-123_train_pt_head_stage_one.png" width="32%" alt="Foundation replay-head training curve">
-  <img src="results/MACEField-omat-dielectric_run-123_train_mp-dielectric_stage_one.png" width="32%" alt="Foundation dielectric-head training curve">
-  <img src="results/MACEField-omat-dielectric_run-123_train_mp-ferroelectric_stage_one.png" width="32%" alt="Foundation ferroelectric-head training curve">
+  <img src="results/MACEField-omat-dielectric_run-123_train_pt_head_stage_one.png" width="99%" alt="Foundation replay-head training curve">
+  <img src="results/MACEField-omat-dielectric_run-123_train_mp-dielectric_stage_one.png" width="99%" alt="Foundation dielectric-head training curve">
+  <img src="results/MACEField-omat-dielectric_run-123_train_mp-ferroelectric_stage_one.png" width="99%" alt="Foundation ferroelectric-head training curve">
 </p>
 
 ### Replay and response parity
