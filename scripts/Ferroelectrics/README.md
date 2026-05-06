@@ -16,7 +16,7 @@ Important data and model files:
 ### Training curve
 
 <p align="center">
-  <img src="results/MACE-Field-MP-Ferroelectrics_run-23_train_Default_stage_one.png" width="72%" alt="MP-Ferroelectrics training curve">
+  <img src="results/MACE-Field-MP-Ferroelectrics_run-23_train_Default_stage_one.png" width="99%" alt="MP-Ferroelectrics training curve">
 </p>
 
 ### Folded parity and spontaneous polarisation
