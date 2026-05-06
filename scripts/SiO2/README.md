@@ -17,7 +17,7 @@ Important files:
 ### Training curve
 
 <p align="center">
-  <img src="results/MACE-field-SiO2_run-23_train_Default_stage_one.png" width="72%" alt="SiO2 training curve">
+  <img src="results/MACE-field-SiO2_run-23_train_Default_stage_one.png" width="99%" alt="SiO2 training curve">
 </p>
 
 ### Spectroscopy and dielectric relaxation
