@@ -28,7 +28,7 @@ Important files:
 </p>
 
 <p align="center">
-  <img src="plots/batio3_hysteresis_snapshots.png" width="72%" alt="BaTiO3 snapshots">
+  <img src="plots/batio3_hysteresis_snapshots.png" width="99%" alt="BaTiO3 snapshots">
 </p>
 
 ## Main entry points
