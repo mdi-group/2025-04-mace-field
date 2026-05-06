@@ -177,10 +177,10 @@ The paper uses figure copies in `figures/`, but the source analyses live in the 
 ### Ferroelectric polarisation branches and spontaneous polarisation
 
 <p align="center">
-  <img src="figures/MACEField-omat-dielectric_parity_folded_splits.png" width="49%" alt="Foundation polarisation parity">
-  <img src="figures/MACEField-omat-dielectric_spontaneous_polarization_folded_splits.png" width="49%" alt="Foundation spontaneous polarisation">
-  <img src="figures/branches_ref_mace_Cr4Li4O16P4.png" width="49%" alt="Foundation one polarisation branch">
-  <img src="figures/MACEField-omat-dielectric_fractional_branch_distribution.png" width="49%" alt="Foundation all polarisation branches">
+  <img src="figures/MACEField-omat-dielectric_parity_folded_splits.png" width="24%" alt="Foundation polarisation parity">
+  <img src="figures/MACEField-omat-dielectric_spontaneous_polarization_folded_splits.png" width="24%" alt="Foundation spontaneous polarisation">
+  <img src="figures/branches_ref_mace_Cr4Li4O16P4.png" width="24%" alt="Foundation one polarisation branch">
+  <img src="figures/MACEField-omat-dielectric_fractional_branch_distribution.png" width="24%" alt="Foundation all polarisation branches">
 </p>
 
 ### BaTiO3 finite-field hysteresis
