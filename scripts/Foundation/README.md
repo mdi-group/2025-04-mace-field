@@ -2,7 +2,7 @@
 
 This folder contains the OMAT-based multihead `MACEField` foundation-model workflow used for the cross-chemistry dielectric and ferroelectric results in the paper.
 
-Heavy artefacts for this workflow are distributed in the release asset `MACEField-omat-pbe-mh-0.zip`; see [../../GITHUB_RELEASE.md](../../GITHUB_RELEASE.md). Extract that archive into `scripts/Foundation/` if you want the original checkpoint, full logs, and replay subset used in the paper.
+Heavy artefacts for this workflow are distributed in the release asset `MACEField-omat-pbe-mh-0.zip`; see the [latest release](https://github.com/mdi-group/2025-04-mace-field/releases/tag/resubmitted). Extract that archive into `scripts/Foundation/` if you want the original checkpoint, full logs, and replay subset used in the paper.
 
 The main local checkpoint is:
 
