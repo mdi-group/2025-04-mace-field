@@ -2,7 +2,7 @@
 
 This folder contains the single-material BaTiO3 direct model, the training artefacts for that model, and the post-processing used to compare the direct hysteresis loop against the OMAT-based foundation loop.
 
-Heavy artefacts for this workflow are distributed in the release assets `MACE-Field-BaTiO3.zip` and `LAMMPs.zip`; see [../../GITHUB_RELEASE.md](../../GITHUB_RELEASE.md). Extract them into `scripts/BaTiO3/` and `scripts/LAMMPs/` for the original direct checkpoint, training logs, and saved hysteresis trajectories.
+Heavy artefacts for this workflow are distributed in the release assets `MACE-Field-BaTiO3.zip` and `LAMMPs.zip`; see the [latest release](https://github.com/mdi-group/2025-04-mace-field/releases/tag/resubmitted). Extract them into `scripts/BaTiO3/` and `scripts/LAMMPs/` for the original direct checkpoint, training logs, and saved hysteresis trajectories.
 
 Important files:
 
