@@ -28,9 +28,9 @@ The committed training and analysis outputs include:
 ### Replay and response parity
 
 <p align="center">
-  <img src="analysis_outputs/foundation_workflow/parity/plots/omat-energy-replay-parity.png" width="32%" alt="Foundation energy parity">
-  <img src="analysis_outputs/foundation_workflow/parity/plots/omat-forces-replay-parity.png" width="32%" alt="Foundation forces parity">
-  <img src="analysis_outputs/foundation_workflow/parity/plots/omat-stress-replay-parity.png" width="32%" alt="Foundation stress parity">
+  <img src="analysis_outputs/foundation_workflow/parity/plots/omat-energy-replay-parity.png" width="24%" alt="Foundation energy parity">
+  <img src="analysis_outputs/foundation_workflow/parity/plots/omat-forces-replay-parity.png" width="24%" alt="Foundation forces parity">
+  <img src="analysis_outputs/foundation_workflow/parity/plots/omat-stress-replay-parity.png" width="48%" alt="Foundation stress parity">
 </p>
 
 <p align="center">
