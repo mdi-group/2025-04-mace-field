@@ -2,7 +2,7 @@
 
 This folder contains the single-material alpha-quartz direct model, spectroscopy analysis, dielectric-relaxation analysis, and the mode-resolved Raman diagnostics used to interpret the foundation-model limitations.
 
-Heavy artefacts for this workflow are distributed in the release assets `MACE-field-SiO2.zip` and `LAMMPs.zip`; see [latest release](https://github.com/mdi-group/2025-04-mace-field/releases/tag/resubmitted). Extract them into `scripts/SiO2/` and `scripts/LAMMPs/` for the original direct checkpoint, training logs, production trajectories, and dielectric-relaxation runs.
+Heavy artefacts for this workflow are distributed in the release assets `MACE-Field-SiO2.zip` and `MACE-Field-LAMMPs.zip`; see [latest release](https://github.com/mdi-group/2025-04-mace-field/releases/tag/resubmitted). Extract them into `scripts/SiO2/` and `scripts/LAMMPs/` for the original direct checkpoint, training logs, production trajectories, and dielectric-relaxation runs.
 
 Important files:
 
@@ -58,15 +58,15 @@ Outputs:
 
 The committed paper runs are:
 
-- OMAT production MLMD: `../LAMMPs/MD/runs/SiO2-mp-7000-sc1x1x1-300K-200ps-2026-05-03_101733/...`
-- Direct production MLMD: `../LAMMPs/MD/runs/SiO2-mp-7000-sc1x1x1-300K-200ps-2026-05-03_101749/...`
+- OMAT production MLMD: `../LAMMPs/runs/SiO2-omat-sc3x3x3-300K-200ps-2026-05-03_101733/...`
+- Direct production MLMD: `../LAMMPs/runs/SiO2-direct-sc3x3x3-300K-200ps-2026-05-03_101749/...`
 
 To rerun them:
 
 ```bash
 cd ../LAMMPs
-MODEL_VARIANT=foundation RUN_IN_BACKGROUND=0 ./run_sio2_mlmd.sh
-MODEL_VARIANT=finetuned  RUN_IN_BACKGROUND=0 ./run_sio2_mlmd.sh
+MODEL_VARIANT=foundation ./run_sio2_mlmd.sh
+MODEL_VARIANT=finetuned  ./run_sio2_mlmd.sh
 ```
 
 ### 3. Rebuild the mode-resolved Raman analysis
@@ -82,8 +82,8 @@ This writes the mode-resolved CSV summaries used to diagnose the Raman discrepan
 
 ```bash
 python Spectroscopy.py \
-  --curve OMAT ../LAMMPs/MD/runs/SiO2-mp-7000-sc1x1x1-300K-200ps-2026-05-03_101733/SiO2-mp-7000/production.annotated.extxyz \
-  --curve Direct ../LAMMPs/MD/runs/SiO2-mp-7000-sc1x1x1-300K-200ps-2026-05-03_101749/SiO2-mp-7000/production.annotated.extxyz \
+  --curve OMAT sio2-omat-spectroscopy.extxyz \
+  --curve Direct sio2-direct-spectroscopy.extxyz \
   --mode-resolved-dir plots \
   --output-prefix plots/sio2_compare \
   --save-plots --no-show
@@ -101,7 +101,7 @@ Key outputs:
 
 ```bash
 python make_spectroscopy_snapshots.py \
-  --input ../LAMMPs/MD/runs/SiO2-mp-7000-sc1x1x1-300K-200ps-2026-05-03_101749/SiO2-mp-7000/production.annotated.extxyz \
+  --input sio2-omat-spectroscopy.extxyz \
   --output-dir plots
 ```
 
