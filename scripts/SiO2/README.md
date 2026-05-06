@@ -2,7 +2,7 @@
 
 This folder contains the single-material alpha-quartz direct model, spectroscopy analysis, dielectric-relaxation analysis, and the mode-resolved Raman diagnostics used to interpret the foundation-model limitations.
 
-Heavy artefacts for this workflow are distributed in the release assets `MACE-field-SiO2.zip` and `LAMMPs.zip`; see [../../GITHUB_RELEASE.md](../../GITHUB_RELEASE.md). Extract them into `scripts/SiO2/` and `scripts/LAMMPs/` for the original direct checkpoint, training logs, production trajectories, and dielectric-relaxation runs.
+Heavy artefacts for this workflow are distributed in the release assets `MACE-field-SiO2.zip` and `LAMMPs.zip`; see [latest release](https://github.com/mdi-group/2025-04-mace-field/releases/tag/resubmitted). Extract them into `scripts/SiO2/` and `scripts/LAMMPs/` for the original direct checkpoint, training logs, production trajectories, and dielectric-relaxation runs.
 
 Important files:
 
