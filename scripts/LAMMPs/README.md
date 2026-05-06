@@ -50,8 +50,8 @@ MODEL_VARIANT=finetuned  ./run_batio3_hysteresis.sh
 
 Committed paper runs:
 
-- foundation / OMAT: `MD/runs/BaTiO3-mp-5986-sc1x1x1-0K-5GHz-hysteresis-2026-05-03_101740/`
-- direct specialist: `MD/runs/BaTiO3-mp-5986-sc1x1x1-0K-5GHz-hysteresis-2026-05-03_101759/`
+- foundation / OMAT: `runs/BaTiO3-omat-sc3x3x3-0K-5GHz-hysteresis-2026-05-03_101740/`
+- direct specialist: `runs/BaTiO3-direct-sc3x3x3-0K-5GHz-hysteresis-2026-05-03_101759/`
 
 Key outputs per run:
 
@@ -69,8 +69,8 @@ MODEL_VARIANT=finetuned  ./run_sio2_mlmd.sh
 
 Committed paper runs:
 
-- foundation / OMAT: `MD/runs/SiO2-mp-7000-sc1x1x1-300K-200ps-2026-05-03_101733/`
-- direct specialist: `MD/runs/SiO2-mp-7000-sc1x1x1-300K-200ps-2026-05-03_101749/`
+- foundation / OMAT: `runs/SiO2-omat-sc3x3x3-300K-200ps-2026-05-03_101733/`
+- direct specialist: `runs/SiO2-direct-sc3x3x3-300K-200ps-2026-05-03_101749/`
 
 Key outputs per run:
 
@@ -88,8 +88,8 @@ MODEL_VARIANT=finetuned  ./run_sio2_dielectric_relax.sh
 
 Committed paper runs:
 
-- foundation / OMAT: `MD/runs/SiO2-mp-7000-sc1x1x1-dielectric-relax-2026-05-04_153401/`
-- direct specialist: `MD/runs/SiO2-mp-7000-sc1x1x1-dielectric-relax-2026-05-04_153404/`
+- foundation / OMAT: `runs/SiO2-omat-sc3x3x3-dielectric-relax-2026-05-04_153401/`
+- direct specialist: `runs/SiO2-direct-sc3x3x3-dielectric-relax-2026-05-04_153404/`
 
 Key outputs per run:
 
