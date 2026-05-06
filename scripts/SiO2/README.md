@@ -23,15 +23,15 @@ Important files:
 ### Spectroscopy and dielectric relaxation
 
 <p align="center">
-  <img src="plots/sio2_compare.png" width="49%" alt="SiO2 spectroscopy comparison">
-  <img src="plots/sio2_dielectric_relax_compare_relaxation.png" width="49%" alt="SiO2 dielectric relaxation comparison">
+  <img src="plots/sio2_compare.png" width="99%" alt="SiO2 spectroscopy comparison">
+  <img src="plots/sio2_dielectric_relax_compare_relaxation.png" width="99%" alt="SiO2 dielectric relaxation comparison">
 </p>
 
 ### Trajectory diagnostics
 
 <p align="center">
-  <img src="plots/sio2_representative_snapshots.png" width="49%" alt="SiO2 representative snapshots">
-  <img src="plots/sio2_thermo_trace.png" width="49%" alt="SiO2 thermo trace">
+  <img src="plots/sio2_representative_snapshots.png" width="99%" alt="SiO2 representative snapshots">
+  <img src="plots/sio2_thermo_trace.png" width="99%" alt="SiO2 thermo trace">
 </p>
 
 ## Main entry points
