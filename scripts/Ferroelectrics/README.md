@@ -2,7 +2,7 @@
 
 This folder contains the cross-chemistry ferroelectric dataset assembly, direct ferroelectric-model training, and branch-aware polarisation analysis used for the folded parity and spontaneous-polarisation results.
 
-Heavy artefacts for this workflow are distributed in the release asset `MACE-Field-MP-Ferroelectrics.zip`; see [../../GITHUB_RELEASE.md](../../GITHUB_RELEASE.md). Extract that archive into `scripts/Ferroelectrics/` for the original dataset splits, checkpoint, and training logs.
+Heavy artefacts for this workflow are distributed in the release asset `MACE-Field-MP-Ferroelectrics.zip`; see the [latest release](https://github.com/mdi-group/2025-04-mace-field/releases/tag/resubmitted). Extract that archive into `scripts/Ferroelectrics/` for the original dataset splits, checkpoint, and training logs.
 
 Important data and model files:
 
