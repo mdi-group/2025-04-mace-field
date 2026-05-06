@@ -174,16 +174,27 @@ The paper uses figure copies in `figures/`, but the source analyses live in the 
   <img src="figures/MACEField-eps_ionic_parity-omat.png" width="49%" alt="Foundation ionic dielectric parity">
 </p>
 
+### Ferroelectric polarisation branches and spontaneous polarisation
+
+<p align="center">
+  <img src="figures/MACEField-omat-dielectric_parity_folded_splits.png" width="49%" alt="Foundation polarisation parity">
+  <img src="figures/MACEField-omat-dielectric_spontaneous_polarization_folded_splits.png" width="49%" alt="Foundation spontaneous polarisation">
+  <img src="figures/branches_ref_mace_Cr4Li4O16P4.png" width="49%" alt="Foundation one polarisation branch">
+  <img src="figures/MACEField-omat-dielectric_fractional_branch_distribution.png" width="49%" alt="Foundation all polarisation branches">
+</p>
+
 ### BaTiO3 finite-field hysteresis
 
 <p align="center">
   <img src="figures/batio3_compare.png" width="49%" alt="BaTiO3 comparison">
   <img src="figures/batio3_switching_trace.png" width="49%" alt="BaTiO3 switching trace">
+  <img src="figures/batio3_hysteresis_snapshots.png" width="100%" alt="BaTiO3 switching snapshots">
 </p>
 
 ### Alpha-quartz spectroscopy and mode-resolved Raman analysis
 
 ![SiO2 comparison](figures/sio2_compare.png)
+![SiO2 snapshots](figures/sio2_representative_snapshots.png)
 
 ## Data and model artefacts
 
