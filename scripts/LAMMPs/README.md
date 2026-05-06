@@ -2,7 +2,7 @@
 
 This folder contains the production finite-field molecular-dynamics launchers, ML-IAP model-export helpers, live/post hoc response logging tools, and saved run directories used for the BaTiO3 and SiO2 case studies in the paper.
 
-The heavy saved trajectories, run directories, and exported `ML-IAP` models for this workflow are distributed in the release asset `LAMMPs.zip`; see [../../GITHUB_RELEASE.md](../../GITHUB_RELEASE.md). Extract that archive into `scripts/LAMMPs/` before trying to rerun the paper post-processing against the original MD outputs.
+The heavy saved trajectories, run directories, and exported `ML-IAP` models for this workflow are distributed in the release asset `LAMMPs.zip`; see the [latest release](https://github.com/mdi-group/2025-04-mace-field/releases/tag/resubmitted). Extract that archive into `scripts/LAMMPs/` before trying to rerun the paper post-processing against the original MD outputs.
 
 The main launchers are:
 
