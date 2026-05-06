@@ -55,8 +55,8 @@ Outputs:
 
 These launchers live in `../LAMMPs/`. The committed paper runs are:
 
-- OMAT foundation run: `../LAMMPs/MD/runs/BaTiO3-mp-5986-sc1x1x1-0K-5GHz-hysteresis-2026-05-03_101740/...`
-- Direct specialist run: `../LAMMPs/MD/runs/BaTiO3-mp-5986-sc1x1x1-0K-5GHz-hysteresis-2026-05-03_101759/...`
+- OMAT foundation run: `../LAMMPs/runs/BaTiO3-omat-sc3x3x3-0K-5GHz-hysteresis-2026-05-03_101740/...`
+- Direct specialist run: `../LAMMPs/runs/BaTiO3-direct-sc3x3x3-0K-5GHz-hysteresis-2026-05-03_101759/...`
 
 To rerun them:
 
@@ -71,8 +71,8 @@ MODEL_VARIANT=finetuned  ./run_batio3_hysteresis.sh
 ```bash
 cd ../BaTiO3
 python plot_hysteresis.py \
-  --curve OMAT ../LAMMPs/MD/runs/BaTiO3-mp-5986-sc1x1x1-0K-5GHz-hysteresis-2026-05-03_101740/BaTiO3-mp-5986/hysteresis.annotated.extxyz \
-  --curve Direct ../LAMMPs/MD/runs/BaTiO3-mp-5986-sc1x1x1-0K-5GHz-hysteresis-2026-05-03_101759/BaTiO3-mp-5986/hysteresis.annotated.extxyz \
+  --curve OMAT batio3-omat-hysteresis.extxyz \
+  --curve Direct batio3-direct-hysteresis.extxyz \
   --output-prefix plots/batio3_compare
 ```
 
@@ -86,7 +86,7 @@ This writes:
 
 ```bash
 python make_hysteresis_snapshots.py \
-  --input ../LAMMPs/MD/runs/BaTiO3-mp-5986-sc1x1x1-0K-5GHz-hysteresis-2026-05-03_101759/BaTiO3-mp-5986/hysteresis.annotated.extxyz \
+  --input batio3-omat-hysteresis.extxyz \
   --output-dir plots
 ```
 
