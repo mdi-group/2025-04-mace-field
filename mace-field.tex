@@ -23,15 +23,6 @@
 \usepackage{hyperref}
 \usepackage{mathpazo}
 \makeatletter
-\@ifundefined{DIFnomarkup}{\newenvironment{DIFnomarkup}{}{}}{}
-\AtBeginDocument{%
-  \@ifundefined{DIFaddFL}{}{\renewcommand{\DIFaddFL}[1]{##1}}%
-  \@ifundefined{DIFdelFL}{}{\renewcommand{\DIFdelFL}[1]{}}%
-  \@ifundefined{DIFaddbeginFL}{}{\renewcommand{\DIFaddbeginFL}{}}%
-  \@ifundefined{DIFaddendFL}{}{\renewcommand{\DIFaddendFL}{}}%
-  \@ifundefined{DIFdelbeginFL}{}{\renewcommand{\DIFdelbeginFL}{}}%
-  \@ifundefined{DIFdelendFL}{}{\renewcommand{\DIFdelendFL}{}}%
-}
 \makeatother
 
 \begin{document}
@@ -625,9 +616,7 @@ In Fig.~\ref{fig:bec_error_dist}, we summarise the error distribution for BEC co
 
 \begin{table}[t]
   \centering
-  \begin{DIFnomarkup}
   \input{bec_outliers_table}
-  \end{DIFnomarkup}
   \caption{\textbf{Top 10 BEC outliers by material.} Largest erroneous BEC predictions (unit of \si{e}) by the fine-tuned \texttt{MACE-Field} model. The first listed element has the largest difference between the MP-Dielectric reference values and the \texttt{MACE-Field} prediction. The second and third elements' BECs in the material are then listed. Notably, all of these outliers correspond to clearly incorrect BECs in the MP-Dielectric dataset; this is most evident from the fact that they do not obey the acoustic sum rule (ASR). The \texttt{MACE-Field} predictions do obey the ASR and give sensible BECs.}
   \label{tab:bec-outliers}
 \end{table}
@@ -695,7 +684,7 @@ Overall, these results demonstrate \texttt{MACE-Field-MH-0} as a field-aware fou
     \centering
     \includegraphics[width=\linewidth]{figures/sio2_compare.png}
     \caption{\textbf{$\alpha$-\ce{SiO2} spectroscopy.}
-    $\alpha$-quartz spectroscopy simulations at 300~\si{K} from \texttt{MACE-Field-MH-0} (blue) and the directly trained specialist (orange). \emph{Top row:} IR spectra (left; from $\dot{\mathbf P}$-$\dot{\mathbf P}$), compared with the DFPT reference response (dashed black), and MLMD Raman spectra (right; from $\boldsymbol\alpha$-$\boldsymbol\alpha$). \emph{Middle row:} real and imaginary parts of the dielectric function $\varepsilon(\omega)$ assembled from time-domain response, again with the DFPT reference shown as dashed black where available. \emph{Bottom row:} mode-resolved Raman spectra reconstructed from finite-difference polarizability derivatives along optical normal modes for the direct model (orange), the foundation model in its own native mode basis (blue), and the foundation response evaluated on the direct-model normal-mode basis (green dashed); black triangle markers denote experimental quartz Raman peak positions~\cite{ENSLyonQuartzRaman}. Spectra use Hann windows and Gaussian broadening $\sigma=20$~\si{cm^{-1}}; intensities are in arbitrary units.}
+    $\alpha$-quartz spectroscopy simulations at 300~\si{K} from \texttt{MACE-Field-MH-0} (blue) and the directly trained specialist (orange). \emph{Top row:} IR spectra (left; from $\dot{\mathbf P}$-$\dot{\mathbf P}$), compared with the DFPT reference response (dashed black), and MLMD Raman spectra (right; from $\boldsymbol\alpha$-$\boldsymbol\alpha$) compared with experimental Raman~\cite{ENSLyonQuartzRaman} (dotted black). \emph{Middle row:} real and imaginary parts of the dielectric function $\varepsilon(\omega)$ assembled from time-domain response, again with the DFPT reference shown as dashed black where available. \emph{Bottom row:} mode-resolved Raman spectra reconstructed from finite-difference polarizability derivatives along optical normal modes for the direct model (orange), the foundation model in its own native mode basis (blue), the foundation response evaluated on the direct-model normal-mode basis (green dashed), and for experimental Raman (black dotted); black triangle markers denote experimental quartz Raman peak positions~\cite{ENSLyonQuartzRaman}. Spectra use Hann windows and Gaussian broadening $\sigma=20$~\si{cm^{-1}}; intensities are in arbitrary units.}
     \label{fig:sio2_spectra}
 \end{figure}
 

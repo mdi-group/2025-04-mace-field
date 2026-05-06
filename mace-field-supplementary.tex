@@ -336,7 +336,7 @@ The six representative structures shown in Fig.~\ref{fig:bto_snapshots_si} are s
 \begin{figure*}[t]
 \centering
 \includegraphics[width=\textwidth]{figures/batio3_hysteresis_snapshots.png}
-\caption{\textbf{Representative atomistic snapshots from the directly trained \ce{BaTiO3} hysteresis trajectory.} The six frames correspond to the circular markers shown on the main-text switching-trace panel (Figure 11): negative field, zero field, pre-switch, switch-mid, switch-end, and positive field. Titles report the time, instantaneous field, and reconstructed polarisation for each frame. Together, they visualise a coherent reversal of the tetragonal off-centring during intrinsic homogeneous switching in the small periodic cell.}
+\caption{\textbf{Representative atomistic snapshots from the \texttt{MACE-Field-MH-0} OMAT-based foundation model \ce{BaTiO3} hysteresis trajectory.} The six frames correspond to the circular markers shown on the main-text switching-trace panel (Figure 11): negative field, zero field, pre-switch, switch-mid, switch-end, and positive field. Titles report the time, instantaneous field, and reconstructed polarisation for each frame. Together, they visualise a coherent reversal of the tetragonal off-centring during intrinsic homogeneous switching in the small periodic cell.}
 \label{fig:bto_snapshots_si}
 \end{figure*}
 
@@ -356,16 +356,16 @@ From the annotated trajectory, we compute:
 (iii) $\varepsilon_\infty$ and $\varepsilon_0$ from $\langle\alpha_{ii}\rangle$ and $\mathrm{Var}[P_i]$,
 and (iv) the frequency-dependent dielectric function $\varepsilon(\omega)$ using the expression above.
 For presentation we apply Gaussian broadening ($\sigma=20~\mathrm{cm}^{-1}$) and plot IR, Raman, $\mathrm{Re}\,\varepsilon$,
-and the loss $-\mathrm{Im}\,\varepsilon$ on a shared $\omega$ axis. Separate small-field relax-and-analyse calculations on the same trajectories reproduce the same qualitative ordering as the time-domain analysis: the OMAT-based foundation model gives systematically larger $\varepsilon_\infty$ and $\varepsilon_0$ than the directly trained specialist. Representative frames from the trajectory, together with temperature and total-energy traces, are shown in Fig.~\ref{fig:sio2_snapshots_si}.
+and the loss $-\mathrm{Im}\,\varepsilon$ on a shared $\omega$ axis. Separate small-field relax-and-analyse calculations on the same trajectories reproduce the same qualitative ordering as the time-domain analysis: the \texttt{MACE-Field-MH-0} OMAT-based foundation model gives systematically larger $\varepsilon_\infty$ and $\varepsilon_0$ than the directly trained specialist. Representative frames from the trajectory obtained from \texttt{MACE-Field-MH-0}, together with temperature and total-energy traces, are shown in Fig.~\ref{fig:sio2_snapshots_si}.
 
 \begin{figure*}[t]
 \centering
-\subfigure[Representative 300 K snapshots from the directly trained $\alpha$-\ce{SiO2} trajectory at 0, 40, 80, 120, 160, and 200 ps.]{%
+\subfigure[Representative 300 K snapshots from the \texttt{MACE-Field-MH-0} OMAT-based foundation model $\alpha$-\ce{SiO2} trajectory at 0, 40, 80, 120, 160, and 200 ps.]{%
 \includegraphics[width=.60\linewidth]{figures/sio2_representative_snapshots.png}}
 \hfill
 \subfigure[Thermal diagnostics for the same trajectory. The marker positions correspond to the six frames shown at left.]{%
 \includegraphics[width=.38\linewidth]{figures/sio2_thermo_trace.png}}
-\caption{\textbf{Representative structures and trajectory diagnostics for the directly trained $\alpha$-\ce{SiO2} MLMD run.} The snapshot panel shows six evenly spaced frames from the 200 ps production trajectory used for the IR/Raman/$\varepsilon(\omega)$ analysis in the main text. The accompanying thermo trace shows that the trajectory remains in the intended finite-temperature regime without obvious long-time drift, supporting the interpretation of the time-domain spectroscopic observables.}
+\caption{\textbf{Representative structures and trajectory diagnostics for the \texttt{MACE-Field-MH-0} OMAT-based foundation model $\alpha$-\ce{SiO2} MLMD run.} The snapshot panel shows six evenly spaced frames from the 200 ps production trajectory used for the IR/Raman/$\varepsilon(\omega)$ analysis in the main text. The accompanying thermo trace shows that the trajectory remains in the intended finite-temperature regime without obvious long-time drift, supporting the interpretation of the time-domain spectroscopic observables.}
 \label{fig:sio2_snapshots_si}
 \end{figure*}
 
@@ -378,7 +378,7 @@ For each panel, the top row shows the training/validation loss versus epoch toge
 
 \textbf{Ferroelectric (cross-chemistry) model.} This model is trained on distortion-path structures with supervision on $(E,\mathbf F,\mathbf P)$ only. Parities for these quantities are tight across materials; $Z^*$ and $\boldsymbol\alpha$ (not included in the loss) show larger scatter, as expected, but remain physically reasonable due to derivative consistency of the learned enthalpy.
 
-\textbf{BaTiO\textsubscript{3}.} Trained on \emph{ab initio} MD frames with supervision on $(E,\mathbf F,\boldsymbol\sigma,\mathbf P,Z^*,\boldsymbol\alpha)$, the model converges smoothly and attains near-linear parities for all observables, enabling the finite-field hysteresis simulation in the main text.
+\textbf{BaTiO\textsubscript{3}.} Trained on \emph{ab initio} MD frames with supervision on $(E,\mathbf F,\boldsymbol\sigma,\mathbf P, Z^*,\boldsymbol\alpha)$, the model converges smoothly and attains near-linear parities for all observables, enabling the finite-field hysteresis simulation in the main text.
 
 \textbf{$\alpha$-SiO\textsubscript{2}.} Trained analogously on $\alpha$-quartz trajectories, the model shows similarly steady convergence and diagonal parities for $\mathbf P$, $Z^*$ and $\boldsymbol\alpha$, supporting the IR/Raman and $\varepsilon(\omega)$ comparisons discussed in the main text.
 
