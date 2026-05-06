@@ -17,7 +17,7 @@ Important files:
 ### Training curve
 
 <p align="center">
-  <img src="results/MACE-Field-BaTiO3_run-23_train_Default_stage_one.png" width="72%" alt="BaTiO3 training curve">
+  <img src="results/MACE-Field-BaTiO3_run-23_train_Default_stage_one.png" width="99%" alt="BaTiO3 training curve">
 </p>
 
 ### Hysteresis and trajectory diagnostics
