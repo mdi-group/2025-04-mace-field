@@ -29,7 +29,7 @@ Each science subdirectory under `scripts/` now has its own README with folder-sp
 
 ## Release assets
 
-The large artefacts for this paper are distributed through the matching GitHub release assets described in [GITHUB_RELEASE.md](GITHUB_RELEASE.md). These archives contain the heavy files that are too large for the main repository, including full training logs, model checkpoints, processed dataset bundles, and saved MLMD trajectories.
+The large artefacts for this paper are distributed through the matching GitHub release assets described in the [latest release](https://github.com/mdi-group/2025-04-mace-field/releases/tag/resubmitted). These archives contain the heavy files that are too large for the main repository, including full training logs, model checkpoints, processed dataset bundles, and saved MLMD trajectories.
 
 Extract the assets into the matching workflow folders before rerunning the full paper analyses:
 
@@ -38,14 +38,14 @@ Extract the assets into the matching workflow folders before rerunning the full 
 - `MACE-Field-MP-Dielectrics.zip` -> `scripts/Dielectrics/`
 - `MACE-Field-MP-Ferroelectrics.zip` -> `scripts/Ferroelectrics/`
 - `MACE-Field-BaTiO3.zip` -> `scripts/BaTiO3/`
-- `MACE-field-SiO2.zip` -> `scripts/SiO2/`
-- `LAMMPs.zip` -> `scripts/LAMMPs/`
+- `MACE-Field-SiO2.zip` -> `scripts/SiO2/`
+- `MACE-Field-LAMMPs.zip` -> `scripts/LAMMPs/`
 
 ## Reproducibility assumptions
 
 To reproduce the full paper outputs from the released artefacts, assume the following setup:
 
-1. The matching release assets from [GITHUB_RELEASE.md](GITHUB_RELEASE.md) have been extracted into the corresponding `scripts/` subdirectories.
+1. The matching release assets from [latest release](https://github.com/mdi-group/2025-04-mace-field/releases/tag/resubmitted) have been extracted into the corresponding `scripts/` subdirectories.
 2. The `mace-field` code repository is checked out as a sibling code dependency, available at https://github.com/mdi-group/mace-field.
 3. A Python environment with `torch`, `ase`, `matplotlib`, `pandas`, `numpy`, `pymatgen`, `mp-api`, `mpcontribs-client`, and the local `mace-field` package available.
 4. For the MLMD workflows, `LAMMPS`, `Apptainer`, and the `macefield-lammps.sif` container used by the launch scripts. Available at https://github.com/orgs/mdi-group/packages.
@@ -57,7 +57,7 @@ Some scripts still contain absolute paths reflecting the workstation layout abov
 
 - Read the manuscript in [mace-field.tex](mace-field.tex) and [mace-field-supplementary.tex](mace-field-supplementary.tex).
 - Look at the final figure copies in [figures/](figures).
-- Read [GITHUB_RELEASE.md](GITHUB_RELEASE.md) if you need the original large checkpoints, logs, splits, or trajectories.
+- Read [latest release](https://github.com/mdi-group/2025-04-mace-field/releases/tag/resubmitted) if you need the original large checkpoints, logs, splits, or trajectories.
 - Use the subfolder READMEs in `scripts/` to trace each figure back to the exact training run, trajectory, and analysis command.
 
 If you want to rebuild the main analysis outputs from the saved trajectories and checkpoints:
@@ -189,7 +189,7 @@ The paper uses figure copies in `figures/`, but the source analyses live in the 
 
 This repository includes the manuscript source, plotting scripts, figure copies, and compact CSV/JSON summaries used to document the final analyses.
 
-The heavier artefacts used by the paper, including full training logs, large model checkpoints, processed dataset bundles, and saved MLMD trajectories, are distributed via the release assets documented in [GITHUB_RELEASE.md](GITHUB_RELEASE.md). Extract those archives into the matching `scripts/` subdirectories before rerunning the full paper workflows.
+The heavier artefacts used by the paper, including full training logs, large model checkpoints, processed dataset bundles, and saved MLMD trajectories, are distributed via the release assets documented in [latest release](https://github.com/mdi-group/2025-04-mace-field/releases/tag/resubmitted). Extract those archives into the matching `scripts/` subdirectories before rerunning the full paper workflows.
 
 ## Citation
 
