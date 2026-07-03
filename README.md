@@ -5,7 +5,7 @@ This repository contains the manuscript source, analysis scripts, figure exports
 > Bradley A. A. Martin, Alex M. Ganose, Venkat Kapil, Tingwei Li, and Keith T. Butler,  
 > *General learning of the electric response of inorganic materials*
 
-The companion codebase that implements the `MACEField` model itself lives in the separate [`mdi-group/mace-field`](https://github.com/mdi-group/mace-field) repository. This repository is the paper-specific reproducibility bundle built around that codebase.
+The companion codebase that implements the `MACEField` model itself lives in the separate [`mdi-group/mace-field`](https://github.com/mdi-group/mace-field) repository.
 
 ## What is in this repository
 
@@ -18,7 +18,7 @@ The companion codebase that implements the `MACEField` model itself lives in the
 - `scripts/SiO2/`: direct single-material alpha-quartz training plus spectroscopy, dielectric-relaxation, and mode-resolved Raman analysis.
 - `scripts/LAMMPs/`: production MLMD launchers, trajectory post-processing, and model export helpers used for the BaTiO3 and SiO2 runs.
 
-Each science subdirectory under `scripts/` now has its own README with folder-specific commands and key outputs:
+Each science subdirectory under `scripts/` has its own README with folder-specific commands and key outputs:
 
 - [Foundation](scripts/Foundation/README.md)
 - [Dielectrics](scripts/Dielectrics/README.md)
@@ -41,7 +41,7 @@ Extract the assets into the matching workflow folders before rerunning the full 
 - `MACE-Field-SiO2.zip` -> `scripts/SiO2/`
 - `MACE-Field-LAMMPs.zip` -> `scripts/LAMMPs/`
 
-## Reproducibility assumptions
+## Reproducibility
 
 To reproduce the full paper outputs from the released artefacts, assume the following setup:
 
@@ -51,14 +51,9 @@ To reproduce the full paper outputs from the released artefacts, assume the foll
 4. For the MLMD workflows, `LAMMPS`, `Apptainer`, and the `macefield-lammps.sif` container used by the launch scripts. Available at https://github.com/orgs/mdi-group/packages.
 5. A Materials Project API key in `MP_API_KEY` for regenerating the MP-Dielectric and MP-Ferroelectric datasets.
 
-Some scripts still contain absolute paths reflecting the workstation layout above. The simplest route is to preserve that layout locally; otherwise, adjust the relevant path constants before rerunning heavy workflows.
+Some scripts still contain absolute paths reflecting the folder layout above. The simplest route is to preserve that layout locally; otherwise, adjust the relevant path constants before rerunning heavy workflows.
 
 ## Quick start
-
-- Read the manuscript in [mace-field.tex](mace-field.tex) and [mace-field-supplementary.tex](mace-field-supplementary.tex).
-- Look at the final figure copies in [figures/](figures).
-- Read [latest release](https://github.com/mdi-group/2025-04-mace-field/releases/tag/resubmitted) if you need the original large checkpoints, logs, splits, or trajectories.
-- Use the subfolder READMEs in `scripts/` to trace each figure back to the exact training run, trajectory, and analysis command.
 
 If you want to rebuild the main analysis outputs from the saved trajectories and checkpoints:
 
